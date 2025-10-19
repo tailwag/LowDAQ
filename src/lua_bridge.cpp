@@ -4,11 +4,17 @@
 #include <mcp2515.h>
 #include "lua.hpp"
 #include <lua_bridge.h>
+#include <Adafruit_ADS1X15.h>
 
 #define CAN_CS 10 
 #define SD_CS 9
 
+#define ADS1_ID 0x48
+
 MCP2515 can0(CAN_CS);
+
+Adafruit_ADS1115 adc0;
+
 lua_State* L;
 
 // Expose millis() to lua
@@ -37,28 +43,77 @@ int lua_sendCanFrame(lua_State* L) {
     return 0;
 }
 
-// Expose Serial print to Lua
-int lua_print(lua_State* L) {
-    int n = lua_gettop(L);
-    for (int i = 1; i <= n; i++) {
-        if (lua_isstring(L, i)) Serial.print(lua_tostring(L, i));
-        else Serial.print(luaL_tolstring(L, i, NULL));
-        if (i != n) Serial.print("\t");
-    }
-    Serial.println();
-    return 0;
+// expose ADC read to LUA
+int lua_adcReadDiff(lua_State* L) {
+    int channel = luaL_checkinteger(L, 1);
+
+    float multiplier = 0.1875F;
+    int16_t result   = 0;
+
+    if (channel == 1)
+        result = adc0.readADC_Differential_0_1();
+    else if (channel == 2)
+        result = adc0.readADC_Differential_2_3();
+
+    lua_pushnumber(L, (float)result * multiplier);
+
+    return 1;    
+}
+
+int lua_floatToString(lua_State* L) {
+    float floatIn = luaL_checknumber(L, 1); 
+    char buf[16]; 
+
+    snprintf(buf, sizeof(buf), "%.3f", floatIn);
+    lua_pushstring(L, buf); 
+
+    return 1;
 }
 
 // Expose Serial print to Lua
-int lua_printf(lua_State* L) {
+// int lua_print(lua_State* L) {
+//     int n = lua_gettop(L);
+//     for (int i = 1; i <= n; i++) {
+//         if (lua_isstring(L, i)) Serial.print(lua_tostring(L, i));
+//         else Serial.print(luaL_tolstring(L, i, NULL));
+//         if (i != n) Serial.print("\t");
+//     }
+//     Serial.println();
+//     return 0;
+// }
+
+// Expose Serial print to Lua
+int luaPrintHandler(lua_State* L) {
     int n = lua_gettop(L);
     for (int i = 1; i <= n; i++) {
-        if (lua_isstring(L, i)) Serial.print(lua_tostring(L, i));
-        else Serial.print(luaL_tolstring(L, i, NULL));
-        if (i != n) Serial.print("\t");
+        if (lua_isinteger(L, i)) {
+            Serial.print("int");
+            Serial.print(lua_tointeger(L, i));
+        }
+        //else if (lua_isnumber(L, i)) {
+        //    Serial.print((float)lua_tonumber(L, i), 2); // force single-precision, 2 decimal places
+        //} 
+        else {
+            Serial.print(lua_tostring(L, i));
+        }
+        if (i < n) Serial.print("\t");
     }
     return 0;
 }
+int lua_print(lua_State* L) {
+    int ret = luaPrintHandler(L); 
+
+    Serial.println();
+    
+    return ret;
+}
+
+int lua_printf(lua_State* L) {
+    int ret = luaPrintHandler(L); 
+
+    return ret;
+}
+
 
 // Expose Serial reading to lua
 int lua_serialRead(lua_State* L) {
@@ -77,6 +132,8 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "print", lua_print);
     lua_register(L, "printf", lua_printf);
     lua_register(L, "serialRead", lua_serialRead);
+    lua_register(L, "adcReadDiff", lua_adcReadDiff);
+    lua_register(L, "floatToString", lua_floatToString);
 }
 
 bool loadLuaScript(const char* path) {
@@ -108,15 +165,37 @@ bool loadLuaScript(const char* path) {
 
 // ---- Public API ----
 bool initLua(const char* scriptPath) {
-    if (can0.reset() != MCP2515::ERROR_OK) return false;
+    if (can0.reset() != MCP2515::ERROR_OK) {
+        Serial.println("Kernel: could not initialize CAN");
+        return false;
+    }
+
     can0.setBitrate(CAN_500KBPS, MCP_16MHZ);
     can0.setNormalMode();
 
-    if (!SD.begin(SD_CS)) return false;
+    if (!SD.begin(SD_CS)) {
+        Serial.println("Kernel: could not initialize SD card");
+        return false;
+    }
+
+    if (!adc0.begin(ADS1_ID)) {
+        Serial.println("Kernel: could not initialize ADS");
+        return false;
+    }
 
     L = luaL_newstate();
     luaL_openlibs(L);
     registerLuaFunctions(L);
+
+    // Serial.println("Floating point number test:");
+    // Serial.print("Default float print   : ");
+    // Serial.println(2.2);
+    // Serial.print("Short float print     : ");
+    // Serial.println(2.2f);
+    // Serial.print("LUA float print       : ");
+    // Serial.println((lua_Number)2.2);
+    // Serial.print("LUA short float print : ");
+    // Serial.println((lua_Number)2.2f);
 
     return loadLuaScript(scriptPath);
 }

@@ -1,16 +1,11 @@
 frames = {
     {id=0x7FF, dlc=8, period=1000, data={0,64,128,255,96,1,2,4}, enabled=true, lastSent=0}
 }
-local repeatChar = function(c, n)
-    line = ""
-    
-    for i = 1, n do 
-        line = line .. c 
-    end
-
-    return line
-end
-
+jobs = {}
+adcChannels = {
+    {1,0,"mV"},
+    {1,0,"mV"},
+}
 local inTable = function(t, v) 
     for _, i in ipairs(t) do 
         if i == v then 
@@ -21,16 +16,26 @@ local inTable = function(t, v)
     return false
 end
 
-local padRight = function(strIn, width)
-    local padding = ""
+local repeatChar = function(c, n)
+    local chArray = {} 
 
-    local spcLen = width - #strIn
-
-    for i = 1, spcLen do 
-        padding = padding .. " "
+    for i = 1, n do 
+        table.insert(chArray, c)
     end
 
-    return strIn .. padding
+    return table.concat(chArray)
+end
+
+local padRight = function(strIn, width)
+    local spcLen = width - #strIn
+
+    return strIn .. repeatChar(" ", spcLen)
+end
+
+local padLeft = function(strIn, width)
+    local spcLen = width - #strIn
+
+    return repeatChar(" ", spcLen) .. strIn
 end
 
 commands = {
@@ -81,7 +86,7 @@ commands = {
             local helpTable = {}
 
             for _, k in ipairs(categories) do 
-                helpTable[k] = {}
+                table.insert(helpTable, {k, {}})
             end
 
             -- add commands 
@@ -99,14 +104,19 @@ commands = {
                 local column1 = k .. "(" .. argString .. ")"
                 local column2 = " - " .. commands[k].helpDescription
 
-                table.insert(helpTable[tabCat], {column1, column2})
+                for _, v in ipairs(helpTable) do 
+                    if v[1] == tabCat then
+                        table.insert(v[2], {column1, column2})
+                    end
+                    --TODO: break?
+                end
             end
             
             -- determine longest width of columns 1
             local col1max = 0
             local col2max = 0
-            for cat, cmds in pairs(helpTable) do 
-                for _, cols in ipairs(cmds) do
+            for _, v in pairs(helpTable) do 
+                for _, cols in ipairs(v[2]) do
                      col1max = #cols[1] > col1max and #cols[1] or col1max
                      col2max = #cols[2] > col2max and #cols[2] or col2max
                 end
@@ -130,32 +140,38 @@ commands = {
             -- finally print the output
             print(titleLine)
 
-            for category, commands in pairs(helpTable) do 
-                -- command category
-                local cat = "=="
-                cat = cat .. repeatChar(" ", categoryMargin)
-                cat = cat .. padRight(category, maxWidth - categoryMargin)
-                cat = cat .. "=="
-                print(cat)
+            for _, v in ipairs(helpTable) do 
+                local l_category = v[1]
+                local l_commands = v[2]
 
-                for _, cmdArr in ipairs(commands) do 
+                -- command category
+                printf("==")
+                printf(repeatChar(" ", categoryMargin))
+                printf(padRight(l_category, maxWidth - categoryMargin))
+                print ("==")
+                collectgarbage()
+
+                for _, cmdArr in ipairs(l_commands) do 
                     -- command with args and description
-                    local cmd = "=="
-                    cmd = cmd .. repeatChar(" ", helpMargin)
-                    cmd = cmd .. padRight(cmdArr[1], col1max)
-                    cmd = cmd .. padRight(cmdArr[2], col2max)
-                    cmd = cmd .. repeatChar(" ", helpMargin)
-                    cmd = cmd .. "=="
-                    print(cmd)
+                    printf("==")
+                    printf(repeatChar(" ", helpMargin))
+                    printf(padRight(cmdArr[1], col1max))
+                    printf(padRight(cmdArr[2], col2max))
+                    printf(repeatChar(" ", helpMargin))
+                    print ("==")
+                    collectgarbage()
                 end
 
                 -- blank line in between categories
                 print("==" .. repeatChar(" ", maxWidth) .. "==")
-
+                collectgarbage()
             end
 
             -- bottom border
             print(repeatChar("=", maxWidth + 4))
+
+            -- avoid memory fragmentation
+            collectgarbage()
         end
     },
     --------------------------------------------------------------
@@ -264,7 +280,194 @@ commands = {
 
             print("Frame 0x" .. string.format("%X", id) .. " not found!")
         end
+    }, 
+
+    pwmList = {
+        helpCategory    = "PWM Commands",
+        helpDescription = "show state of all pwm outputs",
+
+        run = function()
+
+        end          
+    },
+
+    pwmSet = {
+        helpCategory    = "PWM Commands", 
+        helpArguments   = {"pin", "frequency", "dutycycle"},
+        helpDescription = "sets up a pwm output, defaults to on",
+
+        run = function(pin, freq, dutycycle) 
+
+        end
+    },
+
+    pwmToggle = {
+        helpCategory    = "PWM Commands",
+        helpArguments   = {"pin", "[0|1]"},
+        helpDescription = "toggles a pwm output on or off",
+
+        run = function(pin, state)
+        
+        end
+    },
+
+    adcRead = {
+        helpCategory    = "ADC Commands",
+        helpArguments   = {"channel"},
+        helpDescription = "get a voltage measurement from the ADC",
+
+        run = function(channel)
+            channel = channel or 0
+
+            local reading
+
+            if channel and channel >= 1 and channel <= 2 then 
+                reading = adcReadDiff(channel)
+
+                local scale  = adcChannels[channel][1]
+                local offset = adcChannels[channel][2]
+                local unit   = adcChannels[channel][3]
+
+                reading = reading * scale + offset
+
+                print(floatToString(reading) .. unit)
+                return
+            end
+        
+            print("channel can only be 1 or 2 right now")
+            return
+        end
+    },
+
+    adcList = {
+        helpCategory    = "ADC Commands",
+        helpDescription = "list the configuration of the available adc channels",
+
+        run = function()
+            print("#      Scale    Offset     Unit")
+
+            for i, v in ipairs(adcChannels) do
+                col1 = padRight(tostring(i)..".", 3)
+                col2 = padLeft(tostring(v[1]), 9)
+                col3 = padLeft(tostring(v[2]), 9)
+                col4 = padLeft(tostring(v[3]), 9)
+                
+                print(col1..col2..col3..col4)
+            end
+        end
+    },
+
+    adcSetChannel = {
+        helpCategory    = "ADC Commands", 
+        helpArguments   = {"channel", "scale", "offset", "unit"},
+        helpDescription = "set scaling and offset for a channel",
+
+        run = function(channel, scale, offset, unit)
+            channel = tonumber(channel)
+
+            if not channel or channel < 1 or channel > #adcChannels then 
+                print("invalid channel specified")
+                return 
+            end 
+
+            scale  = tonumber(scale)
+            offset = tonumber(offset)
+
+            if not scale or not offset then 
+                print("invalid scale or offset specified")
+                return 
+            end
+
+            unit = tostring(unit) or ""
+
+            adcChannels[channel] = {scale, offset, unit}
+            return             
+        end
+    },
+
+    jobAdd = {
+        helpCategory    = "Job Scripting Commands",
+        helpArguments   = {"function()", "period(ms)", "description"},
+        helpDescription = "schedule a job to occur peridically",
+
+        run = function(job, period, description)
+            local func = load(job)
+
+            if not func then 
+                print("error processing job function")
+                return
+            end
+
+            period = tonumber(period)
+
+            if not period or period < 1 then 
+                print("invalid period, must be > 1 (ms)")
+                return 
+            end
+
+            table.insert(jobs, {run = func, period = period, description = description, enabled = 1, lastSent = 0})
+            return
+        end
+    },
+
+    jobList = {
+        helpCategory    = "Job Scripting Commands",
+        helpDescription = "list current jobs",
+
+        run = function()
+
+        end
+    }, 
+
+    jobToggle = {
+        helpCategory    = "Job Scripting Commands", 
+        helpArguments   = {"index", "[0|1]"},
+        helpDescription = "toggle a job on or off", 
+
+        run = function(index, state)
+
+        end
+    },
+
+    exec = {
+        helpArguments    = {"code"},
+        helpDescription  = "run lua code directly",
+
+        run = function(script)
+            local func = load(script)
+
+            if func then 
+                func()
+            end
+        end
+    },
+
+    testFloats = {
+        helpDescription = "print floating point number tests",
+
+        run = function()
+            local test
+
+            print("Set `local test = 1.1` and print:")
+            test = 1.1
+            print(test)
+
+            print("Set `local test = 1.1 * 2 and print:")
+            test = 1.1 * 2
+            print(test)
+
+            print("Set `local test = 1.1 * 1.1 and print:")
+            test = 1.1 * 1.1
+            print(test)
+        end
     }
+
+    -- TODO trigger commands?
+    -- like if I push a button that puts a hardware pin high or low then do some action
+    -- trigCreate(ioGetPin(2) == 1, ioSetPin(1))
+    -- maybe create a lua array for every io pin
+    -- use interupts on the c++ side to push values to lua?
+    -- I'd like to do a trigger so you can trigger on changed state 
 }
 
 function sendPeriodicFrames()
@@ -273,6 +476,16 @@ function sendPeriodicFrames()
         if f.enabled and t >= f.lastSent + f.period then
             sendCanFrame(f.id, f.dlc, table.unpack(f.data))
             f.lastSent = t
+        end
+    end
+end
+
+function runPeriodicJobs()
+    local t = millis()
+    for _, j in ipairs(jobs) do
+        if j.enabled and t >= j.lastSent + j.period then
+            j.run()
+            j.lastSent = t
         end
     end
 end
@@ -306,21 +519,90 @@ function processSerial()
     end
 end
 
+-- function parseCommand(str)
+--     local name, args = string.match(str, "(%w+)%((.*)%)")
+--     if not name or name == "" then
+--         invalidCommand()
+--         printPrompt()
+--         return
+--     end
+-- 
+--     local argList = {}
+--     for arg in string.gmatch(args, "[^,]+") do
+--         table.insert(argList, tonumber(arg) or arg)
+--     end
+-- 
+--     for n, c in pairs(commands) do 
+--         if n == name then 
+--             c.run(table.unpack(argList))
+--             printPrompt()
+--             return
+--         end
+--     end
+-- 
+--     invalidCommand()
+--     printPrompt()
+-- end
+
+-- Robust Lua command parser for nested parentheses and quotes
 function parseCommand(str)
-    local name, args = string.match(str, "(%w+)%((.*)%)")
-    if not name or name == "" then
+    local name, args = str:match("^(%w+)%((.*)%)")
+    if not name then
         invalidCommand()
         printPrompt()
         return
     end
 
     local argList = {}
-    for num in string.gmatch(args, "[^,]+") do
-        table.insert(argList, tonumber(num))
+    local current = ""
+    local inString = false
+    local escape = false
+    local depth = 0
+
+    for i = 1, #args do
+        local c = args:sub(i, i)
+
+        if inString then
+            if escape then
+                current = current .. c
+                escape = false
+            elseif c == "\\" then
+                current = current .. c
+                escape = true
+            elseif c == '"' then
+                current = current .. c
+                inString = false
+            else
+                current = current .. c
+            end
+        else
+            if c == '"' then
+                current = current .. c
+                inString = true
+            elseif c == "(" then
+                current = current .. c
+                depth = depth + 1
+            elseif c == ")" then
+                if depth > 0 then
+                    current = current .. c
+                    depth = depth - 1
+                end
+            elseif c == "," and depth == 0 then
+                local v = tonumber(current) or current
+                table.insert(argList, v)
+                current = ""
+            else
+                current = current .. c
+            end
+        end
     end
 
-    for n, c in pairs(commands) do 
-        if n == name then 
+    if current ~= "" then
+        table.insert(argList, tonumber(current) or current)
+    end
+
+    for n, c in pairs(commands) do
+        if n == name then
             c.run(table.unpack(argList))
             printPrompt()
             return
@@ -333,5 +615,6 @@ end
 
 function loop()
     sendPeriodicFrames()
+    runPeriodicJobs()
     -- could add Lua serial command parsing here
 end
