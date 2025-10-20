@@ -1,21 +1,101 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <SD.h>
 #include <mcp2515.h>
-#include "lua.hpp"
+#include <stpwm.h>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
 
 #define CAN_CS 10 
 #define SD_CS 9
-
 #define ADS1_ID 0x48
 
-MCP2515 can0(CAN_CS);
+htPwm * pwm[4] = {
+    new htPwm(PA8),
+    new htPwm(PA0),
+    new htPwm(PB1),
+    new htPwm(PB7),
+};
 
+
+
+MCP2515 can0(CAN_CS);
 Adafruit_ADS1115 adc0;
 
 lua_State* L;
+
+
+
+int lua_setPwmFrequency(lua_State* L) {
+    int chan = luaL_checkinteger(L, 1);
+    int freq = luaL_checkinteger(L, 2);
+    
+    pwm[chan]->setFrequency(freq);
+
+    return 0;
+}
+
+int lua_setPwmDutyCycle(lua_State* L) {
+    int chan = luaL_checkinteger(L, 1);
+    int duty = luaL_checkinteger(L, 2);
+
+    pwm[chan]->setDutyCycle(duty);
+
+    return 0;
+}
+
+int lua_setPwmState(lua_State* L) {
+    int chan = luaL_checkinteger(L, 1);
+    int state = constrain(luaL_checkinteger(L, 1), 0, 1); 
+
+    if (state)
+        pwm[chan]->enable();
+    else
+        pwm[chan]->disable();
+
+    return 0;
+}
+
+int lua_getPwmList(lua_State* L) {
+    for (auto &p : pwm) {
+        String pushString = "{";
+
+        pushString += String(p->getFrequency()) + ",";
+        pushString += String(p->getDutyCycle()) + ",";
+        pushString += String(p->getState())     + "}";
+
+        int strArrLength = pushString.length() + 1;
+
+        char stArr[strArrLength];
+        pushString.toCharArray(stArr, strArrLength);
+        
+        lua_pushstring(L, stArr);
+    }
+
+    return 1;
+}
+
+// load a lua module file and return it as a string
+int lua_getFileContents(lua_State* L) {
+    const char* filename = luaL_checkstring(L, 1);
+
+    File dataFile = SD.open(filename, FILE_READ);
+    String fileText = "";
+
+    if (dataFile) {
+        while(dataFile.available()) {
+            fileText += (char)dataFile.read();
+        }
+        dataFile.close();
+    }
+
+    int strArrLength = fileText.length() + 1;
+    char retStr[strArrLength];
+    fileText.toCharArray(retStr, strArrLength);
+
+    lua_pushstring(L, retStr);
+
+    return 1;
+}
 
 // Expose millis() to lua
 int lua_millis(lua_State* L) {
@@ -71,18 +151,6 @@ int lua_floatToString(lua_State* L) {
 }
 
 // Expose Serial print to Lua
-// int lua_print(lua_State* L) {
-//     int n = lua_gettop(L);
-//     for (int i = 1; i <= n; i++) {
-//         if (lua_isstring(L, i)) Serial.print(lua_tostring(L, i));
-//         else Serial.print(luaL_tolstring(L, i, NULL));
-//         if (i != n) Serial.print("\t");
-//     }
-//     Serial.println();
-//     return 0;
-// }
-
-// Expose Serial print to Lua
 int luaPrintHandler(lua_State* L) {
     int n = lua_gettop(L);
     for (int i = 1; i <= n; i++) {
@@ -134,6 +202,11 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "serialRead", lua_serialRead);
     lua_register(L, "adcReadDiff", lua_adcReadDiff);
     lua_register(L, "floatToString", lua_floatToString);
+    lua_register(L, "getFileContents", lua_getFileContents);
+    lua_register(L, "setPwmFrequency", lua_setPwmFrequency);
+    lua_register(L, "setPwmDutyCycle", lua_setPwmDutyCycle);
+    lua_register(L, "setPwmState", lua_setPwmState);
+    lua_register(L, "getPwmList", lua_getPwmList);
 }
 
 bool loadLuaScript(const char* path) {
@@ -186,16 +259,6 @@ bool initLua(const char* scriptPath) {
     L = luaL_newstate();
     luaL_openlibs(L);
     registerLuaFunctions(L);
-
-    // Serial.println("Floating point number test:");
-    // Serial.print("Default float print   : ");
-    // Serial.println(2.2);
-    // Serial.print("Short float print     : ");
-    // Serial.println(2.2f);
-    // Serial.print("LUA float print       : ");
-    // Serial.println((lua_Number)2.2);
-    // Serial.print("LUA short float print : ");
-    // Serial.println((lua_Number)2.2f);
 
     return loadLuaScript(scriptPath);
 }

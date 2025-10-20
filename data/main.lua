@@ -1,12 +1,24 @@
+----------------------------------------------------------------------------
+------- main.lua - all logic and baseline functions (non user called) ------
+-------            should reside here. user functions in func.lua     ------
+----------------------------------------------------------------------------
+
+-- periodic can frames
 frames = {
     {id=0x7FF, dlc=8, period=1000, data={0,64,128,255,96,1,2,4}, enabled=true, lastSent=0}
 }
+
+-- periodic jobs (cron)
 jobs = {}
+
+-- adc channel scale, offset, and unit
 adcChannels = {
     {1,0,"mV"},
     {1,0,"mV"},
 }
-local inTable = function(t, v) 
+
+-- check if value is in table
+inTable = function(t, v) 
     for _, i in ipairs(t) do 
         if i == v then 
             return true
@@ -16,7 +28,8 @@ local inTable = function(t, v)
     return false
 end
 
-local repeatChar = function(c, n)
+-- return a string of n number of c characters
+repeatChar = function(c, n)
     local chArray = {} 
 
     for i = 1, n do 
@@ -26,18 +39,19 @@ local repeatChar = function(c, n)
     return table.concat(chArray)
 end
 
-local padRight = function(strIn, width)
+-- pad a string with spaces
+padRight = function(strIn, width)
     local spcLen = width - #strIn
 
     return strIn .. repeatChar(" ", spcLen)
 end
-
-local padLeft = function(strIn, width)
+padLeft = function(strIn, width)
     local spcLen = width - #strIn
 
     return repeatChar(" ", spcLen) .. strIn
 end
 
+-- user facing commands 
 commands = {
     -------------------------------------------------------------
     --- you shouldn't have to mess with this 
@@ -178,289 +192,8 @@ commands = {
     ----- end help command 
     --------------------------------------------------------------
 
+    -- run function definitions pulled in from func.lua
 
-    pfList = {
-        helpCategory    = "Periodic CAN Frame Commands",
-        helpArguments   = {""},
-        helpDescription = "returns list of all periodic frames",
-        
-        run = function()
-            local n = 1
-            for i, f in ipairs(frames) do 
-                local line = string.format("%d. 0x%X - %dms - ", i, f.id, f.period)
-                for j = 1, f.dlc do 
-                    line = line .. string.format("%02X ", f.data[j]) 
-                end
-                print(line)
-            end
-        end
-    }, 
-
-    pfToggle = {
-        helpCategory    = "Periodic CAN Frame Commands",
-        helpArguments   = {"id", "[0,1]"},
-        helpDescription = "toggles a periodic frame on or off",
-
-        run = function(id, state)
-            for _, f in ipairs(frames) do 
-                if f.id == id then 
-                    f.enabled = state
-                end 
-            end
-        end
-    }, 
-
-    pfByteSet = {
-        helpCategory    = "Periodic CAN Frame Commands",
-        helpArguments   = {"id", "index", "value"},
-        helpDescription = "update the value of one byte",
-
-        run = function(id, index, value)
-            if value > 255 or value < 0 then 
-                print("Value must be between 0-255")
-                return 
-            end
-            
-            for _, f in ipairs(frames) do 
-                if f.id == id then
-                    if index > f.dlc then
-                        print("Frame is only ".. f.dlc .. " bytes long.")
-                        return
-                    end
-
-                    f.data[index] = value
-                    return 
-                end
-            end
-        
-            print("Frame 0x" .. string.format("%X", id) .. " not found!")
-
-        end
-    },
-
-    pfDlcSet = {
-        helpCategory    = "Periodic CAN Frame Commands", 
-        helpArguments   = {"id", "value"}, 
-        helpDescription = "update the length of a periodic frame", 
-
-        run = function(id, value) 
-            if value > 8 or value < 0 then 
-                print("Value must be between 0-8")
-                return
-            end
-
-            for _, f in ipairs(frames) do 
-                if f.id == id then 
-                    f.dlc = value
-                    return 
-                end 
-            end
-
-            print("Frame 0x" .. string.format("%X", id) .. " not found!")
-        end   
-    }, 
-    
-    pfTimeSet = { 
-        helpCategory    = "Periodic CAN Frame Commands",
-        helpArguments   = {"id", "ms"},
-        helpDescription = "adjust the period of a frame",
-
-        run = function(id, value)
-            if value > 100000 or value < 0 then 
-                print("Value must be between 0-100000")
-                return 
-            end
-
-            for _, f in ipairs(frames) do 
-                if f.id == id then 
-                    f.period = value
-                    return
-                end
-            end
-
-            print("Frame 0x" .. string.format("%X", id) .. " not found!")
-        end
-    }, 
-
-    pwmList = {
-        helpCategory    = "PWM Commands",
-        helpDescription = "show state of all pwm outputs",
-
-        run = function()
-
-        end          
-    },
-
-    pwmSet = {
-        helpCategory    = "PWM Commands", 
-        helpArguments   = {"pin", "frequency", "dutycycle"},
-        helpDescription = "sets up a pwm output, defaults to on",
-
-        run = function(pin, freq, dutycycle) 
-
-        end
-    },
-
-    pwmToggle = {
-        helpCategory    = "PWM Commands",
-        helpArguments   = {"pin", "[0|1]"},
-        helpDescription = "toggles a pwm output on or off",
-
-        run = function(pin, state)
-        
-        end
-    },
-
-    adcRead = {
-        helpCategory    = "ADC Commands",
-        helpArguments   = {"channel"},
-        helpDescription = "get a voltage measurement from the ADC",
-
-        run = function(channel)
-            channel = channel or 0
-
-            local reading
-
-            if channel and channel >= 1 and channel <= 2 then 
-                reading = adcReadDiff(channel)
-
-                local scale  = adcChannels[channel][1]
-                local offset = adcChannels[channel][2]
-                local unit   = adcChannels[channel][3]
-
-                reading = reading * scale + offset
-
-                print(floatToString(reading) .. unit)
-                return
-            end
-        
-            print("channel can only be 1 or 2 right now")
-            return
-        end
-    },
-
-    adcList = {
-        helpCategory    = "ADC Commands",
-        helpDescription = "list the configuration of the available adc channels",
-
-        run = function()
-            print("#      Scale    Offset     Unit")
-
-            for i, v in ipairs(adcChannels) do
-                col1 = padRight(tostring(i)..".", 3)
-                col2 = padLeft(tostring(v[1]), 9)
-                col3 = padLeft(tostring(v[2]), 9)
-                col4 = padLeft(tostring(v[3]), 9)
-                
-                print(col1..col2..col3..col4)
-            end
-        end
-    },
-
-    adcSetChannel = {
-        helpCategory    = "ADC Commands", 
-        helpArguments   = {"channel", "scale", "offset", "unit"},
-        helpDescription = "set scaling and offset for a channel",
-
-        run = function(channel, scale, offset, unit)
-            channel = tonumber(channel)
-
-            if not channel or channel < 1 or channel > #adcChannels then 
-                print("invalid channel specified")
-                return 
-            end 
-
-            scale  = tonumber(scale)
-            offset = tonumber(offset)
-
-            if not scale or not offset then 
-                print("invalid scale or offset specified")
-                return 
-            end
-
-            unit = tostring(unit) or ""
-
-            adcChannels[channel] = {scale, offset, unit}
-            return             
-        end
-    },
-
-    jobAdd = {
-        helpCategory    = "Job Scripting Commands",
-        helpArguments   = {"function()", "period(ms)", "description"},
-        helpDescription = "schedule a job to occur peridically",
-
-        run = function(job, period, description)
-            local func = load(job)
-
-            if not func then 
-                print("error processing job function")
-                return
-            end
-
-            period = tonumber(period)
-
-            if not period or period < 1 then 
-                print("invalid period, must be > 1 (ms)")
-                return 
-            end
-
-            table.insert(jobs, {run = func, period = period, description = description, enabled = 1, lastSent = 0})
-            return
-        end
-    },
-
-    jobList = {
-        helpCategory    = "Job Scripting Commands",
-        helpDescription = "list current jobs",
-
-        run = function()
-
-        end
-    }, 
-
-    jobToggle = {
-        helpCategory    = "Job Scripting Commands", 
-        helpArguments   = {"index", "[0|1]"},
-        helpDescription = "toggle a job on or off", 
-
-        run = function(index, state)
-
-        end
-    },
-
-    exec = {
-        helpArguments    = {"code"},
-        helpDescription  = "run lua code directly",
-
-        run = function(script)
-            local func = load(script)
-
-            if func then 
-                func()
-            end
-        end
-    },
-
-    testFloats = {
-        helpDescription = "print floating point number tests",
-
-        run = function()
-            local test
-
-            print("Set `local test = 1.1` and print:")
-            test = 1.1
-            print(test)
-
-            print("Set `local test = 1.1 * 2 and print:")
-            test = 1.1 * 2
-            print(test)
-
-            print("Set `local test = 1.1 * 1.1 and print:")
-            test = 1.1 * 1.1
-            print(test)
-        end
-    }
 
     -- TODO trigger commands?
     -- like if I push a button that puts a hardware pin high or low then do some action
@@ -469,6 +202,28 @@ commands = {
     -- use interupts on the c++ side to push values to lua?
     -- I'd like to do a trigger so you can trigger on changed state 
 }
+
+---------------------------------------------------------
+------ pull in function definitions from func.lua -------
+---------------------------------------------------------
+-- local functionImportString = getFileContents("func.lua")
+-- print("Loading Functions...")
+-- local reqFunc = load(functionImportString)
+-- if reqFunc then reqFunc() end
+-- reqFunc = nil
+-- functionImportString = nil
+-- 
+-- local commandsImportString = getFileContents("cmds.lua")
+-- print("Loading Commands...")
+-- local reqCmds = load(commandsImportString)
+-- if reqCmds then reqCmds() end
+-- reqCmds = nil 
+-- commandsImportString = nil
+-- 
+-- collectgarbage()
+---------------------------------------------------------
+------------ end function load --------------------------
+---------------------------------------------------------
 
 function sendPeriodicFrames()
     local t = millis()
@@ -518,31 +273,6 @@ function processSerial()
         c = serialRead()
     end
 end
-
--- function parseCommand(str)
---     local name, args = string.match(str, "(%w+)%((.*)%)")
---     if not name or name == "" then
---         invalidCommand()
---         printPrompt()
---         return
---     end
--- 
---     local argList = {}
---     for arg in string.gmatch(args, "[^,]+") do
---         table.insert(argList, tonumber(arg) or arg)
---     end
--- 
---     for n, c in pairs(commands) do 
---         if n == name then 
---             c.run(table.unpack(argList))
---             printPrompt()
---             return
---         end
---     end
--- 
---     invalidCommand()
---     printPrompt()
--- end
 
 -- Robust Lua command parser for nested parentheses and quotes
 function parseCommand(str)
