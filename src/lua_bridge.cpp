@@ -9,10 +9,9 @@
 #define SD_CS 9
 #define ADS1_ID 0x48
 
-htPwm * pwm[4] = {
+htPwm * pwm[NUM_PWM] = {
     new htPwm(PA8),
     new htPwm(PA0),
-    new htPwm(PB1),
     new htPwm(PB7),
 };
 
@@ -29,7 +28,7 @@ int lua_setPwmFrequency(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
     int freq = luaL_checkinteger(L, 2);
     
-    pwm[chan]->setFrequency(freq);
+    pwm[chan-1]->setFrequency(freq);
 
     return 0;
 }
@@ -38,38 +37,45 @@ int lua_setPwmDutyCycle(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
     int duty = luaL_checkinteger(L, 2);
 
-    pwm[chan]->setDutyCycle(duty);
+    pwm[chan-1]->setDutyCycle(duty);
 
     return 0;
 }
 
 int lua_setPwmState(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
-    int state = constrain(luaL_checkinteger(L, 1), 0, 1); 
+    int state = constrain(luaL_checkinteger(L, 2), 0, 1); 
 
     if (state)
-        pwm[chan]->enable();
+        pwm[chan-1]->enable();
     else
-        pwm[chan]->disable();
+        pwm[chan-1]->disable();
 
     return 0;
 }
 
 int lua_getPwmList(lua_State* L) {
-    for (auto &p : pwm) {
-        String pushString = "{";
+    char * pwmStrings[NUM_PWM];
+    uint8_t a = 0;
 
+    String pushString = "return {";
+    for (auto &p : pwm) {
+        pushString += "{";
         pushString += String(p->getFrequency()) + ",";
         pushString += String(p->getDutyCycle()) + ",";
-        pushString += String(p->getState())     + "}";
+        pushString += String(p->getState())     + "},";
 
-        int strArrLength = pushString.length() + 1;
-
-        char stArr[strArrLength];
-        pushString.toCharArray(stArr, strArrLength);
-        
-        lua_pushstring(L, stArr);
+        ++a;
     }
+    pushString += "}";
+
+    uint8_t sLen = pushString.length() + 1;
+
+    char pushArr[sLen];
+
+    pushString.toCharArray(pushArr, sLen); 
+
+    lua_pushstring(L, pushArr);
 
     return 1;
 }

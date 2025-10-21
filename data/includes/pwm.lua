@@ -1,15 +1,39 @@
 pwmList = function()
-    local test = getPwmList()
+    local pwmListString = getPwmList()
+    local listLoader, err = load(pwmListString)
 
-    print(test)
+    if not listLoader then 
+        print("Error loading PWM list from C api: "..err)
+        return 
+    end
+
+    local pwmList = listLoader()
+
+    if pwmList then 
+        for i, v in ipairs(pwmList) do
+            local pin  = i
+            local freq = v[1]
+            local duty = v[2]
+            local en   = v[3]
+
+            lineArr = {}
+            table.insert(lineArr, padRight(tostring(pin)..".", 5))
+            table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
+            table.insert(lineArr, padRight(tostring(duty).."%", 6))
+            table.insert(lineArr, padRight(tostring(en), 6))
+
+            print(table.concat(lineArr))
+        end
+    end
 end
 
-pwmSet = function(pin, freq, dc)
-
+pwmSet = function(chan, freq, dc)
+    setPwmFrequency(chan, freq)
+    setPwmDutyCycle(chan, dc)
 end
 
-pwmToggle = function(pin, state)
-
+pwmToggle = function(chan, state)
+    setPwmState(chan, state)
 end
 
 commands.pwmList = {

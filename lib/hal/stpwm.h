@@ -1,12 +1,14 @@
 #include <Arduino.h>
 
+#define NUM_PWM 3
+
 struct PinTimerMap {
     uint8_t pin;
     TIM_TypeDef * timer;
     uint8_t channel;
 };
 
-extern PinTimerMap timerMap[4];
+extern PinTimerMap timerMap[];
 
 TIM_TypeDef * getMapForPin(uint8_t pin);
 int getChannelForPin(uint8_t pin);
