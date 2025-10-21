@@ -28,11 +28,40 @@ pwmList = function()
 end
 
 pwmSet = function(chan, freq, dc)
+    local numPWMs = getNumPWMs()
+
+    if chan < 1 or chan > numPWMs then 
+        print("Channel must be between 1 and " .. tostring(numPWMs))
+        return
+    end
+
+    if freq < 1 or freq > 40000 then 
+        print("Frequency must be between 1 and 40000")
+        return
+    end
+
+    if dc < 0 or dc > 100 then 
+        print("Duty cycle must be between 0 and 100")
+        return
+    end
+    
     setPwmFrequency(chan, freq)
     setPwmDutyCycle(chan, dc)
 end
 
 pwmToggle = function(chan, state)
+    local numPWMs = getNumPWMs()
+
+    if chan < 1 or chan > numPWMs then 
+        print("Channel must be between 1 and " .. tostring(numPWMs))
+        return
+    end
+
+    if state ~= 0 and state ~= 1 then 
+        print("State must be 0 or 1")
+        return 
+    end
+
     setPwmState(chan, state)
 end
 

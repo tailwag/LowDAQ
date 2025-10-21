@@ -22,7 +22,11 @@ Adafruit_ADS1115 adc0;
 
 lua_State* L;
 
+int lua_getNumPWMs(lua_State* L) {
+    lua_pushinteger(L, NUM_PWM);
 
+    return 1;
+}
 
 int lua_setPwmFrequency(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
@@ -209,6 +213,7 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "adcReadDiff", lua_adcReadDiff);
     lua_register(L, "floatToString", lua_floatToString);
     lua_register(L, "getFileContents", lua_getFileContents);
+    lua_register(L, "getNumPWMs", lua_getNumPWMs);
     lua_register(L, "setPwmFrequency", lua_setPwmFrequency);
     lua_register(L, "setPwmDutyCycle", lua_setPwmDutyCycle);
     lua_register(L, "setPwmState", lua_setPwmState);
