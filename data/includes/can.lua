@@ -1,70 +1,76 @@
 pfList = function()
+    local outputArray = {}
+
     local n = 1
     for i, f in ipairs(frames) do 
         local line = string.format("%d. 0x%X - %dms - ", i, f.id, f.period)
         for j = 1, f.dlc do 
             line = line .. string.format("%02X ", f.data[j]) 
         end
-        print(line)
+        table.insert(outputArray, line)
     end
+
+    return table.concat(outputArray), 0
 end
 
 pfToggle = function(id, state)
     for _, f in ipairs(frames) do 
         if f.id == id then 
             f.enabled = state
+            return nil, 0
         end 
     end
+
+    return "Frame 0x" .. string.format("%X", id) .. " not found", 1
 end
 
 pfByteSet = function(id, index, value)
     if value > 255 or value < 0 then 
-        print("Value must be between 0-255")
-        return 
+        return "Value must be between 0-255", 1
     end
     
     for _, f in ipairs(frames) do 
         if f.id == id then
             if index > f.dlc then
-                print("Frame is only ".. f.dlc .. " bytes long.")
-                return
+                return "Frame is only ".. f.dlc .. " bytes long.", 1
             end
 
             f.data[index] = value
-            return 
+            return nil, 0
         end
     end
-    print("Frame 0x" .. string.format("%X", id) .. " not found!")
+
+    return "Frame 0x" .. string.format("%X", id) .. " not found!", 1
 end
 
 pfDlcSet = function(id, value) 
     if value > 8 or value < 0 then 
-        print("Value must be between 0-8")
-        return
+        return "Value must be between 0-8", 1
     end
 
     for _, f in ipairs(frames) do 
         if f.id == id then 
             f.dlc = value
-            return 
+            return nil, 0
         end 
     end
-    print("Frame 0x" .. string.format("%X", id) .. " not found!")
+
+    return "Frame 0x" .. string.format("%X", id) .. " not found!", 1
 end
 
 pfTimeSet = function(id, value)
     if value > 100000 or value < 0 then 
-        print("Value must be between 0-100000")
-        return 
+        return "Value must be between 0-100000", 1
     end
 
     for _, f in ipairs(frames) do 
         if f.id == id then 
             f.period = value
-            return
+            return nil, 0
         end
     end
-    print("Frame 0x" .. string.format("%X", id) .. " not found!")
+    
+    return "Frame 0x" .. string.format("%X", id) .. " not found!", 1
 end
 
 commands.pfList = {

@@ -2,24 +2,23 @@ jobAdd = function(job, period, description)
     local func = load(job)
 
     if not func then 
-        print("error processing job function")
-        return
+        return "Error processing job function", 1
     end
 
     period = tonumber(period)
 
     if not period or period < 1 then 
-        print("invalid period, must be > 1 (ms)")
-        return 
+        return "invalid period, must be > 1 (ms)", 1
     end
 
     table.insert(jobs, {run = func, period = period, description = description, enabled = 1, lastSent = 0})
-    return
+    
+    return nil, 0
 end
 
 
 jobList = function()
-    print("#       Period    Description")
+    local outputArray = {"#       Period    Description"}
 
     for i, v in ipairs(jobs) do 
         local j_index  = padRight(tostring(i) .. ".", 5)
@@ -29,10 +28,11 @@ jobList = function()
         j_index       = padRight(j_index, 5)
         j_period      = padLeft(j_period, 9)
 
-        print(j_index..j_period.."    "..j_description)
+        table.insert(outputArray, "\n"..j_index..j_period.."    "..j_description)
     end
-end
 
+    return table.concat(outputArray), 0
+end
 
 jobToggle = function(index, state)
 

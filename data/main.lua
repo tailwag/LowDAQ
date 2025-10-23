@@ -45,6 +45,7 @@ padRight = function(strIn, width)
 
     return strIn .. repeatChar(" ", spcLen)
 end
+
 padLeft = function(strIn, width)
     local spcLen = width - #strIn
 
@@ -191,39 +192,7 @@ commands = {
     --------------------------------------------------------------
     ----- end help command 
     --------------------------------------------------------------
-
-    -- run function definitions pulled in from func.lua
-
-
-    -- TODO trigger commands?
-    -- like if I push a button that puts a hardware pin high or low then do some action
-    -- trigCreate(ioGetPin(2) == 1, ioSetPin(1))
-    -- maybe create a lua array for every io pin
-    -- use interupts on the c++ side to push values to lua?
-    -- I'd like to do a trigger so you can trigger on changed state 
 }
-
----------------------------------------------------------
------- pull in function definitions from func.lua -------
----------------------------------------------------------
--- local functionImportString = getFileContents("func.lua")
--- print("Loading Functions...")
--- local reqFunc = load(functionImportString)
--- if reqFunc then reqFunc() end
--- reqFunc = nil
--- functionImportString = nil
--- 
--- local commandsImportString = getFileContents("cmds.lua")
--- print("Loading Commands...")
--- local reqCmds = load(commandsImportString)
--- if reqCmds then reqCmds() end
--- reqCmds = nil 
--- commandsImportString = nil
--- 
--- collectgarbage()
----------------------------------------------------------
------------- end function load --------------------------
----------------------------------------------------------
 
 function sendPeriodicFrames()
     local t = millis()
@@ -333,7 +302,12 @@ function parseCommand(str)
 
     for n, c in pairs(commands) do
         if n == name then
-            c.run(table.unpack(argList))
+            local output, error = c.run(table.unpack(argList))
+            
+            if output then
+                print(output)
+            end 
+
             printPrompt()
             return
         end

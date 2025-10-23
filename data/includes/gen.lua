@@ -4,6 +4,8 @@ exec = function(script)
     if func then 
         func()
     end
+
+    return nil, 0
 end
 
 testFloats = function()
@@ -20,6 +22,8 @@ testFloats = function()
     print("Set `local test = 1.1 * 1.1 and print:")
     test = 1.1 * 1.1
     print(test)
+
+    return nil, 0
 end
 
 commands.exec = {

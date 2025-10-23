@@ -12,16 +12,16 @@ adcRead = function(channel)
 
         reading = reading * scale + offset
 
-        print(floatToString(reading) .. unit)
-        return
+        return floatToString(reading), unit, 0
     end
 
-    print("channel can only be 1 or 2 right now")
-    return
+    return "channel can only be 1 or 2 right now", 1
 end
 
 adcList = function()
-    print("#      Scale    Offset     Unit")
+    local outputArray = {}
+
+    table.insert(outputArray, "#      Scale    Offset     Unit\n")
 
     for i, v in ipairs(adcChannels) do
         col1 = padRight(tostring(i)..".", 3)
@@ -29,30 +29,31 @@ adcList = function()
         col3 = padLeft(tostring(v[2]), 9)
         col4 = padLeft(tostring(v[3]), 9)
         
-        print(col1..col2..col3..col4)
+        table.insert(outputArray, col1..col2..col3..col4.."\n")
     end
+
+    return table.concat(outputArray), 0
 end
 
 adcSetChannel = function(channel, scale, offset, unit)
     channel = tonumber(channel)
 
     if not channel or channel < 1 or channel > #adcChannels then 
-        print("invalid channel specified")
-        return 
+        return "invalid channel specified", 1
     end 
 
     scale  = tonumber(scale)
     offset = tonumber(offset)
 
     if not scale or not offset then 
-        print("invalid scale or offset specified")
-        return 
+        return "invalid scale or offset specified", 1
     end
 
     unit = tostring(unit) or ""
 
     adcChannels[channel] = {scale, offset, unit}
-    return             
+    
+    return nil, 0
 end
 
 commands.adcRead = {
