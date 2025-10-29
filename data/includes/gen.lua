@@ -1,13 +1,19 @@
+-- run a base lua command
 exec = function(script)
+	-- grab lua string from console and load as a function
     local func = load(script)
 
+	-- execute function
     if func then 
         func()
     end
 
+	-- return no error
     return nil, 0
 end
 
+
+-- test floating point math
 testFloats = function()
     local test
 

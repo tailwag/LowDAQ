@@ -38,6 +38,10 @@ jobToggle = function(index, state)
 
 end
 
+-------------------------------------------------------------------
+--- add all definied commands to the command parser in main.lua ---
+-------------------------------------------------------------------
+
 commands.jobAdd = {
     helpCategory    = "Job Scripting Commands",
     helpArguments   = {"function()", "period(ms)", "description"},
