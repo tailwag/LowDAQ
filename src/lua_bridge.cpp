@@ -15,8 +15,7 @@ htPwm * pwm[NUM_PWM] = {
 #ifdef G474RE 
       new htPwm(PC2),
       new htPwm(PB11), 
-      new htPwm(PB1),
-      new htPwm(PB7),
+      new htPwm(PA4),
 #endif
 };
 

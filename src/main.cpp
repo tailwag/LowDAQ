@@ -14,6 +14,8 @@ void setup() {
     Serial.print("Initialize Lua ... ");
     delay(200);
 
+	// load main lua file. this defines the console behavior and 
+	// the main structure of the available commands
     if (!initLua("/main.lua")) {
         Serial.println("Failed to initialize Lua!");
         while(true);
