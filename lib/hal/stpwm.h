@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define NUM_PWM 3
+#define NUM_PWM 4
 
 struct PinTimerMap {
     uint8_t pin;

@@ -5,20 +5,27 @@
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
 
-#define CAN_CS 10 
-#define SD_CS 9
-#define ADS1_ID 0x48
 
 htPwm * pwm[NUM_PWM] = {
-    new htPwm(PA8),
-    new htPwm(PA0),
-    new htPwm(PB7),
+#ifdef F401RE
+      new htPwm(PA8),
+      new htPwm(PA0),
+      new htPwm(PB7),
+#endif
+#ifdef G474RE 
+      new htPwm(PC2),
+      new htPwm(PB11), 
+      new htPwm(PB1),
+      new htPwm(PB7),
+#endif
 };
 
-
-
-MCP2515 can0(CAN_CS);
+MCP2515 can0(CAN0_CS);
 Adafruit_ADS1115 adc0;
+
+#ifdef L432KC_BOARD
+  Adafruit_ADS1115 adc1;
+#endif
 
 lua_State* L;
 
@@ -249,22 +256,20 @@ bool loadLuaScript(const char* path) {
 
 // ---- Public API ----
 bool initLua(const char* scriptPath) {
-    if (can0.reset() != MCP2515::ERROR_OK) {
-        Serial.println("Kernel: could not initialize CAN");
-        return false;
-    }
-
-    can0.setBitrate(CAN_500KBPS, MCP_16MHZ);
-    can0.setNormalMode();
-
     if (!SD.begin(SD_CS)) {
         Serial.println("Kernel: could not initialize SD card");
         return false;
     }
 
+    if (can0.reset() != MCP2515::ERROR_OK) {
+        Serial.println("Kernel: could not initialize CAN");
+    }
+
+    can0.setBitrate(CAN_500KBPS, MCP_8MHZ);
+    can0.setNormalMode();
+
     if (!adc0.begin(ADS1_ID)) {
         Serial.println("Kernel: could not initialize ADS");
-        return false;
     }
 
     L = luaL_newstate();

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <SD.h>
+#include <vector>
 
 struct FileList {
     char ** names;   // array of strings
