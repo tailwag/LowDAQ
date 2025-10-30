@@ -26,7 +26,7 @@ end
 -- toggle a periodic frame on or off
 pfToggle = function(id, state)
 	-- input sanitization
-	if not state or state and (state != 0 or state != 1) then 
+	if not state or state and (state ~= 0 or state ~= 1) then 
 		return "State must be either 1 or 0", 1
 	end
 
