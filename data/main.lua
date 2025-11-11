@@ -18,9 +18,9 @@ adcChannels = {
 }
 
 -- check if value is in table
-inTable = function(t, v) 
-    for _, i in ipairs(t) do 
-        if i == v then 
+inTable = function(t, v)
+    for _, i in ipairs(t) do
+        if i == v then
             return true
         end
     end
@@ -30,9 +30,9 @@ end
 
 -- return a string of n number of c characters
 repeatChar = function(c, n)
-    local chArray = {} 
+    local chArray = {}
 
-    for i = 1, n do 
+    for i = 1, n do
         table.insert(chArray, c)
     end
 
@@ -64,7 +64,7 @@ commands = {
     help = {
         helpDescription = "display this menu",
 
-        run = function() 
+        run = function()
             -- name displayed in title bar of help menu
             local menuTitle = " Low Level DAQ System "
 
@@ -77,7 +77,7 @@ commands = {
             -- alphabetize command names
             local commandNames = {}
 
-            for k in pairs(commands) do 
+            for k in pairs(commands) do
                 table.insert(commandNames, k)
             end
 
@@ -86,32 +86,32 @@ commands = {
             -- retrieve and alphabetize category names
             local categories = {}
 
-            for k, v in pairs(commands) do 
+            for _, v in pairs(commands) do
                 if v.helpCategory and not inTable(categories, v.helpCategory) then -- new category
                     table.insert(categories, v.helpCategory)
                 end
             end
 
             table.sort(categories)
-            
+
             -- insert general commands at top
             table.insert(categories, 1, "General Commands")
-            
+
             -- build output help array
             local helpTable = {}
 
-            for _, k in ipairs(categories) do 
+            for _, k in ipairs(categories) do
                 table.insert(helpTable, {k, {}})
             end
 
             -- add commands 
-            for _, k in ipairs(commandNames) do 
+            for _, k in ipairs(commandNames) do
                 -- get index for helpTable, if nil then use general
                 local tabCat = commands[k].helpCategory or "General Commands"
-                
+
                 -- create example argument string
                 local argString = ""
-                if commands[k].helpArguments then 
+                if commands[k].helpArguments then
                     argString = table.concat(commands[k].helpArguments, ", ")
                 end
 
@@ -119,18 +119,18 @@ commands = {
                 local column1 = k .. "(" .. argString .. ")"
                 local column2 = " - " .. commands[k].helpDescription
 
-                for _, v in ipairs(helpTable) do 
+                for _, v in ipairs(helpTable) do
                     if v[1] == tabCat then
                         table.insert(v[2], {column1, column2})
                     end
                     --TODO: break?
                 end
             end
-            
+
             -- determine longest width of columns 1
             local col1max = 0
             local col2max = 0
-            for _, v in pairs(helpTable) do 
+            for _, v in pairs(helpTable) do
                 for _, cols in ipairs(v[2]) do
                      col1max = #cols[1] > col1max and #cols[1] or col1max
                      col2max = #cols[2] > col2max and #cols[2] or col2max
@@ -141,7 +141,7 @@ commands = {
             local maxWidth = col1max + col2max + 2 * helpMargin
 
             -- if width id odd add an extra = 
-            if maxWidth % 2 == 1 then 
+            if maxWidth % 2 == 1 then
                 maxWidth = maxWidth + 1
                 col2max = col2max + 1
             end
@@ -155,7 +155,7 @@ commands = {
             -- finally print the output
             print(titleLine)
 
-            for _, v in ipairs(helpTable) do 
+            for _, v in ipairs(helpTable) do
                 local l_category = v[1]
                 local l_commands = v[2]
 
@@ -303,10 +303,10 @@ function parseCommand(str)
     for n, c in pairs(commands) do
         if n == name then
             local output, error = c.run(table.unpack(argList))
-            
+
             if output then
                 print(output)
-            end 
+            end
 
             printPrompt()
             return
@@ -320,5 +320,4 @@ end
 function loop()
     sendPeriodicFrames()
     runPeriodicJobs()
-    -- could add Lua serial command parsing here
 end

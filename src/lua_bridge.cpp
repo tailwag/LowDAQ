@@ -1,30 +1,32 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <mcp2515.h>
-#include <stpwm.h>
+#include <cstdint>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
 
+#include "STM32DuinoPWM.hpp"
+#include "STM32DuinoCANFD.hpp"
+#include "WSerial.h"
+#include "lauxlib.h"
+#include "lua.h"
 
-htPwm * pwm[NUM_PWM] = {
-#ifdef F401RE
-      new htPwm(PA8),
-      new htPwm(PA0),
-      new htPwm(PB7),
+#define NUM_PWM 3
+
+OutputPWM * pwm[NUM_PWM] = {
+#ifdef ARDUINO_NUCLEO_F401RE
+      new OutputPWM(PA8),
+      new OutputPWM(PA0),
+      new OutputPWM(PB7),
 #endif
-#ifdef G474RE 
-      new htPwm(PC2),
-      new htPwm(PB11), 
-      new htPwm(PA4),
+#ifdef ARDUINO_NUCLEO_G474RE 
+      new OutputPWM(PC2),
+      new OutputPWM(PB11), 
+      new OutputPWM(PA4),
 #endif
 };
 
-MCP2515 can0(CAN0_CS);
+FDCanChannel can0(CH1, b500000, b2000000);
 Adafruit_ADS1115 adc0;
-
-#ifdef L432KC_BOARD
-  Adafruit_ADS1115 adc1;
-#endif
 
 lua_State* L;
 
@@ -121,21 +123,20 @@ int lua_millis(lua_State* L) {
 
 // Expose CAN frame send to LUA
 int lua_sendCanFrame(lua_State* L) {
-    int id  = luaL_checkinteger(L, 1);
-    int dlc = luaL_checkinteger(L, 2);
+    CanFrame SendFrame;
 
-    uint8_t data[8] = {0};
-    for (int i = 0; i < dlc; i++) 
-        data[i] = luaL_checkinteger(L, 3 + i); 
+    SendFrame.canId  = luaL_checkinteger(L, 1);
+    SendFrame.canDlc = luaL_checkinteger(L, 2);
 
-    can_frame frame;
+    uint8_t dataLength = lua_gettop(L) - 2;
+    uint8_t byteLength = DlcToLen(SendFrame.canDlc);
 
-    frame.can_id = id;
-    frame.can_dlc = dlc;
+    dataLength = (byteLength < dataLength) ? byteLength : dataLength;
 
-    memcpy(frame.data, data, dlc);
-
-    can0.sendMessage(&frame);
+    for (int i = 0; i < dataLength; i++) {
+        SendFrame.data[i] = luaL_checkinteger(L, 3 + i); 
+    }
+    can0.sendFrame(&SendFrame);
     return 0;
 }
 
@@ -260,12 +261,11 @@ bool initLua(const char* scriptPath) {
         return false;
     }
 
-    if (can0.reset() != MCP2515::ERROR_OK) {
-        Serial.println("Kernel: could not initialize CAN");
+    can0.begin();
+    
+    for (uint8_t i = 0; i < NUM_PWM; i++) {
+      pwm[i]->begin();
     }
-
-    can0.setBitrate(CAN_500KBPS, MCP_8MHZ);
-    can0.setNormalMode();
 
     if (!adc0.begin(ADS1_ID)) {
         Serial.println("Kernel: could not initialize ADS");

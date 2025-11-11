@@ -5,7 +5,7 @@ adcRead = function(channel)
 
 	-- confine the channels to what's available 
 	-- need to change this later to be more dynamic
-    if channel and channel >= 1 and channel <= 2 then 
+    if channel and channel >= 1 and channel <= 2 then
 		-- get initial raw reading from the c api
         local reading = adcReadDiff(channel)
 
@@ -40,7 +40,7 @@ adcList = function()
         col2 = padLeft(tostring(v[1]), 9)
         col3 = padLeft(tostring(v[2]), 9)
         col4 = padLeft(tostring(v[3]), 9)
-        
+
 		-- add line to table
         table.insert(outputArray, col1..col2..col3..col4.."\n")
     end
@@ -56,16 +56,16 @@ adcSetChannel = function(channel, scale, offset, unit)
     channel = tonumber(channel)
 
 	-- input checking, make sure channel is in bounds
-    if not channel or channel < 1 or channel > #adcChannels then 
+    if not channel or channel < 1 or channel > #adcChannels then
         return "invalid channel specified", 1
-    end 
+    end
 
 	-- ensure values are numbers
     scale  = tonumber(scale)
     offset = tonumber(offset)
 
 	-- if scale or offset invalid return error
-    if not scale or not offset then 
+    if not scale or not offset then
         return "invalid scale or offset specified", 1
     end
 
@@ -86,7 +86,7 @@ commands.adcRead = {
     helpArguments   = {"channel"},
     helpDescription = "get a voltage measurement from the ADC",
 
-    run = function() end 
+    run = function() end
 }
 commands.adcRead.run       = adcRead
 
@@ -101,7 +101,7 @@ commands.adcList.run       = adcList
 
 
 commands.adcSetChannel = {
-    helpCategory    = "ADC Commands", 
+    helpCategory    = "ADC Commands",
     helpArguments   = {"channel", "scale", "offset", "unit"},
     helpDescription = "set scaling and offset for a channel",
 

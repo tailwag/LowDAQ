@@ -1,18 +1,18 @@
 jobAdd = function(job, period, description)
     local func = load(job)
 
-    if not func then 
+    if not func then
         return "Error processing job function", 1
     end
 
     period = tonumber(period)
 
-    if not period or period < 1 then 
+    if not period or period < 1 then
         return "invalid period, must be > 1 (ms)", 1
     end
 
     table.insert(jobs, {run = func, period = period, description = description, enabled = 1, lastSent = 0})
-    
+
     return nil, 0
 end
 
@@ -20,7 +20,7 @@ end
 jobList = function()
     local outputArray = {"#       Period    Description"}
 
-    for i, v in ipairs(jobs) do 
+    for i, v in ipairs(jobs) do
         local j_index  = padRight(tostring(i) .. ".", 5)
         local j_period      = v.period and tostring(v.period) or ""
         local j_description = v.description and tostring(v.description) or ""
@@ -57,14 +57,14 @@ commands.jobList = {
     helpDescription = "list current jobs",
 
     run = function() end
-} 
+}
 commands.jobList.run       = jobList
 
 
 commands.jobToggle = {
-    helpCategory    = "Job Scripting Commands", 
+    helpCategory    = "Job Scripting Commands",
     helpArguments   = {"index", "[0|1]"},
-    helpDescription = "toggle a job on or off", 
+    helpDescription = "toggle a job on or off",
 
     run = function() end
 }

@@ -54,18 +54,18 @@ pwmSet = function(chan, freq, dc)
     local numPWMs = getNumPWMs()
 
 	-- input sanitization
-    if chan < 1 or chan > numPWMs then 
+    if chan < 1 or chan > numPWMs then
         return "Channel must be between 1 and " .. tostring(numPWMs), 1
     end
 
-    if freq < 1 or freq > 40000 then 
+    if freq < 1 or freq > 40000 then
         return "Frequency must be between 1 and 40000", 1
     end
 
-    if dc < 0 or dc > 100 then 
+    if dc < 0 or dc > 100 then
         return "Duty cycle must be between 0 and 100", 1
     end
-    
+
 	-- bound c functions defined in lua_bridge.cpp
     setPwmFrequency(chan, freq)
     setPwmDutyCycle(chan, dc)
@@ -80,11 +80,11 @@ pwmToggle = function(chan, state)
     local numPWMs = getNumPWMs()
 
 	-- input sanitization
-    if chan < 1 or chan > numPWMs then 
+    if chan < 1 or chan > numPWMs then
         return "Channel must be between 1 and " .. tostring(numPWMs), 1
     end
 
-    if state ~= 0 and state ~= 1 then 
+    if state ~= 0 and state ~= 1 then
         return "State must be 0 or 1", 1
     end
 
@@ -108,7 +108,7 @@ commands.pwmList.run       = pwmList
 
 
 commands.pwmSet = {
-    helpCategory    = "PWM Commands", 
+    helpCategory    = "PWM Commands",
     helpArguments   = {"pin", "frequency", "dutycycle"},
     helpDescription = "sets up a pwm output, defaults to on",
 
