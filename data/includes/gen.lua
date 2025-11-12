@@ -4,7 +4,7 @@ exec = function(script)
     local func = load(script)
 
 	-- execute function
-    if func then 
+    if func then
         func()
     end
 
