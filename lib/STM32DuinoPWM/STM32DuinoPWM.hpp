@@ -1,5 +1,6 @@
 #include "STM32DuinoPWM_PinDefs.hpp"
 #include <Arduino.h>
+#include <cstdint>
 
 enum PwmRange {
   LOWFREQ, 
@@ -40,7 +41,7 @@ class OutputPWM : public STM32HALPWM {
   private:
     float frequency;
     float dutyCycle;
-    bool  state;
+    bool  state = false;
 
   public:
     OutputPWM(uint8_t pin, float freq = 128, float duty = 50.0f);
@@ -68,6 +69,9 @@ class InputPWM : public STM32HALPWM {
     volatile uint32_t lastFalling;
     volatile uint32_t period;
     volatile uint32_t pulseWidth;
+    volatile uint32_t lastCapture;
+
+    bool signalPresent = false; 
 
     uint16_t prescalerValue; 
     static void captureCallback(void *arg);

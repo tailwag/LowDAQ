@@ -1,6 +1,7 @@
 #include "STM32DuinoPWM.hpp"
 #include "HardwareTimer.h"
 #include "stm32g474xx.h"
+#include "wiring_time.h"
 #include <cstdint>
 
 static InputPWM *inputInstances[32] = {nullptr};
@@ -123,10 +124,12 @@ void OutputPWM::setDutyCycle(float duty) {
 }
 
 void OutputPWM::enable() {
+  state = true;
   if (halTimer) halTimer->resume();
 }
 
 void OutputPWM::disable() {
+  state = false;
   if (halTimer) halTimer->pause();
 }
 
@@ -146,6 +149,10 @@ InputPWM::InputPWM(uint8_t pin, PwmRange range) : STM32HALPWM(pin) {
 }
 
 void InputPWM::handleCapture() {
+  lastCapture   = millis();
+  signalPresent = true;
+
+
   uint32_t capture = halTimer->getCaptureCompare(channel); 
   bool level = digitalRead(pwmPin); // true = rising, false = falling;
 
@@ -192,6 +199,10 @@ void InputPWM::end() {
 }
 
 float InputPWM::getFrequency() {
+  if (!signalPresent || millis() - lastCapture > 1000) {
+    signalPresent = false;
+    return 0.0f;
+  }
   if (period == 0 || !halTimer) return 0.0f;
 
   float timerClk = static_cast<float>(halTimer->getTimerClkFreq()) / static_cast<float>((prescalerValue)); 
@@ -199,6 +210,10 @@ float InputPWM::getFrequency() {
 }
 
 float InputPWM::getDutyCycle() {
+  if (!signalPresent || millis() - lastCapture > 1000) {
+    signalPresent = false; 
+    return 0.0f; 
+  }
   if (period == 0) return 0.0f;
 
   return 100.0f * static_cast<float>(pulseWidth) / static_cast<float>(period);
