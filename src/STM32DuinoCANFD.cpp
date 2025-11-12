@@ -389,8 +389,8 @@ void FDCanChannel::sendFrame(CanFrame * Frame) {
 
   uint8_t halOpStatus = HAL_FDCAN_AddMessageToTxFifoQ(&Interface, &TxHeader, trimmedDataArray);
 
-  if (halOpStatus != HAL_OK) 
-    Error_Handler();
+  //if (halOpStatus != HAL_OK) 
+  //  Error_Handler();
 }
 
 /* ---------------------------------------------------- *
