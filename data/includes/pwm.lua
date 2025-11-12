@@ -1,5 +1,57 @@
+pwmInList = function()
+  local pwmListString = getPwmInList()
+  local listLoader, err = load(pwmListString)
+
+  if not listLoader then
+    return "Error loading PWM input list from C api: "..err, 1
+  end
+
+  local pwmList = listLoader()
+
+  if not pwmList then
+    return "Error loading PWM list from C api.", 1
+  end
+
+  local outputArray = {}
+
+  for i, v in ipairs(pwmList) do
+    local pin  = i
+    local freq = v[1]
+    local duty = v[2]
+
+    local lineArr = {}
+    table.insert(lineArr, padRight(tostring(pin)..".", 5))
+    table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
+    table.insert(lineArr, padRight(tostring(duty).."%", 6))
+
+    table.insert(outputArray, table.concat(lineArr).."\n")
+  end
+
+  return table.concat(outputArray), 0
+end
+
+pwmInGetFreq = function(chan)
+  local numPWMs = getNumPWMIn()
+
+  if chan < 1 or chan > numPWMs then
+    return "Channel must be between 1 and " .. tostring(numPWMs), 1
+  end
+
+  return getPwmInFrequency(chan), 0
+end
+
+pwmInGetDuty = function(chan)
+  local numPWMs = getNumPWMIn()
+
+  if chan < 1 or chan > numPWMs then
+    return "Channel must be between 1 and " .. tostring(numPWMs), 1
+  end
+
+  return getPwmInDutyCycle(chan), 0
+end
+
 -- list all current hardware PWMs
-pwmList = function()
+pwmOutList = function()
 	-- pwm list is managed directly on the c side, since the pwm 
 	-- function uses the ST HAL timers directly
 	-- getPwmList() returns a lua function which creates an array
@@ -8,13 +60,13 @@ pwmList = function()
 		-- {128,  50, 1},
 		-- {1000, 40, 0},
 	-- }
-	
+
 	-- get the return string from c, and initialize function to get data out
-    local pwmListString = getPwmList()
+    local pwmListString = getPwmOutList()
     local listLoader, err = load(pwmListString)
 
 	-- if loader is nil then return error
-    if not listLoader then 
+    if not listLoader then
         return "Error loading PWM list from C api: "..err, 1
     end
 
@@ -35,7 +87,7 @@ pwmList = function()
         local duty = v[2]
         local en   = v[3]
 
-        lineArr = {}
+        local lineArr = {}
         table.insert(lineArr, padRight(tostring(pin)..".", 5))
         table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
         table.insert(lineArr, padRight(tostring(duty).."%", 6))
@@ -49,9 +101,9 @@ end
 
 
 -- set the frequency and duty cycle of a pwm output
-pwmSet = function(chan, freq, dc)
+pwmOutSet = function(chan, freq, dc)
 	-- get number of pwm outputs from c api
-    local numPWMs = getNumPWMs()
+    local numPWMs = getNumPWMOut()
 
 	-- input sanitization
     if chan < 1 or chan > numPWMs then
@@ -67,17 +119,17 @@ pwmSet = function(chan, freq, dc)
     end
 
 	-- bound c functions defined in lua_bridge.cpp
-    setPwmFrequency(chan, freq)
-    setPwmDutyCycle(chan, dc)
+    setPwmOutFrequency(chan, freq)
+    setPwmOutDutyCycle(chan, dc)
 
     return nil, 0
 end
 
 
 -- toggles a pwm on or off
-pwmToggle = function(chan, state)
+pwmOutToggle = function(chan, state)
 	-- get number of pwm outputs from c api
-    local numPWMs = getNumPWMs()
+    local numPWMs = getNumPWMOut()
 
 	-- input sanitization
     if chan < 1 or chan > numPWMs then
@@ -89,7 +141,7 @@ pwmToggle = function(chan, state)
     end
 
 	-- bound c function from lua_bridge.cpp
-    setPwmState(chan, state)
+    setPwmOutState(chan, state)
 
     return nil, 0
 end
@@ -98,30 +150,56 @@ end
 --- add all definied commands to the command parser in main.lua ---
 -------------------------------------------------------------------
 
-commands.pwmList = {
+commands.pwmInList  = {
+    helpCategory    = "PWM Commands",
+    helpDescription = "show state of all pwm inputs",
+
+    run = function() end
+}
+commands.pwmInList.run = pwmInList
+
+commands.pwmInGetFreq = {
+    helpCategory      = "PWM Commands",
+    helpDescription   = "measure frequency of pwm input",
+    helpArguments     = {"pin"},
+
+    run = function() end
+}
+commands.pwmInGetFreq.run = pwmInGetFreq
+
+commands.pwmInGetDuty = {
+    helpCategory      = "PWM Commands",
+    helpDescription   = "measure duty cycle of pwm input",
+    helpArguments     = {"pin"},
+
+    run = function() end
+}
+commands.pwmInGetDuty.run = pwmInGetDuty
+
+commands.pwmOutList = {
     helpCategory    = "PWM Commands",
     helpDescription = "show state of all pwm outputs",
 
     run = function() end
 }
-commands.pwmList.run       = pwmList
+commands.pwmOutList.run       = pwmOutList
 
 
-commands.pwmSet = {
+commands.pwmOutSet = {
     helpCategory    = "PWM Commands",
     helpArguments   = {"pin", "frequency", "dutycycle"},
     helpDescription = "sets up a pwm output, defaults to on",
 
     run = function() end
 }
-commands.pwmSet.run        = pwmSet
+commands.pwmOutSet.run        = pwmOutSet
 
 
-commands.pwmToggle = {
+commands.pwmOutToggle = {
     helpCategory    = "PWM Commands",
     helpArguments   = {"pin", "[0|1]"},
     helpDescription = "toggles a pwm output on or off",
 
     run = function() end
 }
-commands.pwmToggle.run     = pwmToggle
+commands.pwmOutToggle.run     = pwmOutToggle

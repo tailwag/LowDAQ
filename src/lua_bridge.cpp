@@ -33,10 +33,10 @@ OutputPWM * pwmOut[OUTPUT_PWMS] = {
 
 InputPWM * pwmIn[INPUT_PWMS] = {
 #ifdef ARDUINO_NUCLEO_G474RE
-  new InputPWM(PC0), 
-  new InputPWM(PC1), 
-  new InputPWM(PC2), 
-  new InputPWM(PC3),
+  new InputPWM(PC0, LOWFREQ), 
+  new InputPWM(PC1, LOWFREQ), 
+  new InputPWM(PC2, LOWFREQ), 
+  new InputPWM(PC3, LOWFREQ),
 #endif // ARDUINO_NUCLEO_G474RE
 };
 
@@ -293,6 +293,7 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "getNumPWMIn", lua_getNumPWMIn); 
     lua_register(L, "getPwmInFrequency", lua_getPwmInFrequency); 
     lua_register(L, "getPwmInDutyCycle", lua_getPwmInDutyCycle);
+    lua_register(L, "getPwmInList", lua_getPwmInList);
 }
 
 bool loadLuaScript(const char* path) {
