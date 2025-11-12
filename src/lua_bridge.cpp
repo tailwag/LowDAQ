@@ -3,26 +3,41 @@
 #include <cstdint>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
+#include <sys/_intsup.h>
 
 #include "STM32DuinoPWM.hpp"
 #include "STM32DuinoCANFD.hpp"
 #include "WSerial.h"
 #include "lauxlib.h"
 #include "lua.h"
+#include "variant_NUCLEO_G474RE.h"
+#include "wiring_time.h"
 
-#define NUM_PWM 3
-
-OutputPWM * pwm[NUM_PWM] = {
-#ifdef ARDUINO_NUCLEO_F401RE
-      new OutputPWM(PA8),
-      new OutputPWM(PA0),
-      new OutputPWM(PB7),
+#ifdef ARDUINO_NUCLEO_G474RE
+#define OUTPUT_PWMS 1 
+#define INPUT_PWMS 4
 #endif
+
+void _log(String msg) {
+  Serial.print("[");
+  Serial.print(millis()); 
+  Serial.print("] - "); 
+  Serial.println(msg);
+}
+
+OutputPWM * pwmOut[OUTPUT_PWMS] = {
 #ifdef ARDUINO_NUCLEO_G474RE 
-      new OutputPWM(PC2),
-      new OutputPWM(PB11), 
-      new OutputPWM(PA4),
+      new OutputPWM(PA0),
 #endif
+};
+
+InputPWM * pwmIn[INPUT_PWMS] = {
+#ifdef ARDUINO_NUCLEO_G474RE
+  new InputPWM(PC0), 
+  new InputPWM(PC1), 
+  new InputPWM(PC2), 
+  new InputPWM(PC3),
+#endif // ARDUINO_NUCLEO_G474RE
 };
 
 FDCanChannel can0(CH1, b500000, b2000000);
@@ -30,48 +45,49 @@ Adafruit_ADS1115 adc0;
 
 lua_State* L;
 
-int lua_getNumPWMs(lua_State* L) {
-    lua_pushinteger(L, NUM_PWM);
+int lua_getNumPWMOut(lua_State* L) {
+    lua_pushinteger(L, OUTPUT_PWMS);
 
     return 1;
 }
 
-int lua_setPwmFrequency(lua_State* L) {
+
+int lua_setPwmOutFrequency(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
     int freq = luaL_checkinteger(L, 2);
     
-    pwm[chan-1]->setFrequency(freq);
+    pwmOut[chan-1]->setFrequency(freq);
 
     return 0;
 }
 
-int lua_setPwmDutyCycle(lua_State* L) {
+int lua_setPwmOutDutyCycle(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
     int duty = luaL_checkinteger(L, 2);
 
-    pwm[chan-1]->setDutyCycle(duty);
+    pwmOut[chan-1]->setDutyCycle(duty);
 
     return 0;
 }
 
-int lua_setPwmState(lua_State* L) {
+int lua_setPwmOutState(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
     int state = constrain(luaL_checkinteger(L, 2), 0, 1); 
 
     if (state)
-        pwm[chan-1]->enable();
+        pwmOut[chan-1]->enable();
     else
-        pwm[chan-1]->disable();
+        pwmOut[chan-1]->disable();
 
     return 0;
 }
 
-int lua_getPwmList(lua_State* L) {
-    char * pwmStrings[NUM_PWM];
+int lua_getPwmOutList(lua_State* L) {
+    char * pwmStrings[OUTPUT_PWMS];
     uint8_t a = 0;
 
     String pushString = "return {";
-    for (auto &p : pwm) {
+    for (auto &p : pwmOut) {
         pushString += "{";
         pushString += String(p->getFrequency()) + ",";
         pushString += String(p->getDutyCycle()) + ",";
@@ -84,12 +100,61 @@ int lua_getPwmList(lua_State* L) {
     uint8_t sLen = pushString.length() + 1;
 
     char pushArr[sLen];
-
     pushString.toCharArray(pushArr, sLen); 
 
     lua_pushstring(L, pushArr);
 
     return 1;
+}
+
+int lua_getNumPWMIn(lua_State* L) {
+  lua_pushinteger(L, INPUT_PWMS);
+
+  return 1;
+}
+
+int lua_getPwmInFrequency(lua_State* L) {
+  int chan = luaL_checkinteger(L, 1);
+
+  float freq = pwmIn[chan-1]->getFrequency(); 
+
+  lua_pushnumber(L, freq); 
+
+  return 1; 
+}
+
+int lua_getPwmInDutyCycle(lua_State* L) {
+  int chan = luaL_checkinteger(L, 1);
+
+  float duty = pwmIn[chan-1]->getDutyCycle(); 
+
+  lua_pushnumber(L, duty);
+
+  return 1;
+}
+
+int lua_getPwmInList(lua_State* L) {
+  char * pwmStrings[INPUT_PWMS];
+  uint8_t a = 0;
+
+  String pushString = "return {";
+  for (auto &p : pwmIn) {
+    pushString += "{";
+    pushString += String(p->getFrequency()) + ",";
+    pushString += String(p->getDutyCycle()) + "},";
+
+    ++a;
+  }
+  pushString += "}";
+
+  uint8_t sLen = pushString.length() + 1;
+
+  char pushArr[sLen];
+  pushString.toCharArray(pushArr, sLen);
+
+  lua_pushstring(L, pushArr); 
+
+  return 1;
 }
 
 // load a lua module file and return it as a string
@@ -220,11 +285,14 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "adcReadDiff", lua_adcReadDiff);
     lua_register(L, "floatToString", lua_floatToString);
     lua_register(L, "getFileContents", lua_getFileContents);
-    lua_register(L, "getNumPWMs", lua_getNumPWMs);
-    lua_register(L, "setPwmFrequency", lua_setPwmFrequency);
-    lua_register(L, "setPwmDutyCycle", lua_setPwmDutyCycle);
-    lua_register(L, "setPwmState", lua_setPwmState);
-    lua_register(L, "getPwmList", lua_getPwmList);
+    lua_register(L, "getNumPWMOut", lua_getNumPWMOut);
+    lua_register(L, "setPwmOutFrequency", lua_setPwmOutFrequency);
+    lua_register(L, "setPwmOutDutyCycle", lua_setPwmOutDutyCycle);
+    lua_register(L, "setPwmOutState", lua_setPwmOutState);
+    lua_register(L, "getPwmOutList", lua_getPwmOutList);
+    lua_register(L, "getNumPWMIn", lua_getNumPWMIn); 
+    lua_register(L, "getPwmInFrequency", lua_getPwmInFrequency); 
+    lua_register(L, "getPwmInDutyCycle", lua_getPwmInDutyCycle);
 }
 
 bool loadLuaScript(const char* path) {
@@ -257,18 +325,28 @@ bool loadLuaScript(const char* path) {
 // ---- Public API ----
 bool initLua(const char* scriptPath) {
     if (!SD.begin(SD_CS)) {
-        Serial.println("Kernel: could not initialize SD card");
+        _log("Kernel: could not initialize SD card");
         return false;
     }
 
+    _log("Start CAN-FD");
     can0.begin();
-    
-    for (uint8_t i = 0; i < NUM_PWM; i++) {
-      pwm[i]->begin();
+   
+    _log("Start PWM Output(s):");
+    for (uint8_t i = 0; i < OUTPUT_PWMS; i++) {
+      pwmOut[i]->begin();
+      _log("  CH" + String(i) + ": ✓");
     }
 
+    _log("Start PWM Input(s):");
+    for (uint8_t i = 0; i < INPUT_PWMS; i++) {
+      pwmIn[i]->begin(); 
+      _log("  CH" + String(i) + ": ✓");
+    }
+
+    _log("Start ADS Peripheral:");
     if (!adc0.begin(ADS1_ID)) {
-        Serial.println("Kernel: could not initialize ADS");
+        _log("    Could not initialize ADS!");
     }
 
     L = luaL_newstate();

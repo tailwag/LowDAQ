@@ -10,8 +10,7 @@ void setup() {
     delay(1000);
 
     Serial.println();
-    Serial.println("Staring up ...");
-    Serial.print("Initialize Lua ... ");
+    Serial.println("Starting up ...");
     delay(200);
 
 	// load main lua file. this defines the console behavior and 
@@ -20,7 +19,6 @@ void setup() {
         Serial.println("Failed to initialize Lua!");
         while(true);
     }
-    Serial.println("✓");
     
     Serial.println("Loading include files: ");
 
