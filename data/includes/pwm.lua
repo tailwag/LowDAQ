@@ -1,53 +1,53 @@
 pwmInList = function()
-  local pwmListString = getPwmInList()
-  local listLoader, err = load(pwmListString)
+    local pwmListString = getPwmInList()
+    local listLoader, err = load(pwmListString)
 
-  if not listLoader then
-    return "Error loading PWM input list from C api: "..err, 1
-  end
+    if not listLoader then
+        return "Error loading PWM input list from C api: "..err, 1
+    end
 
-  local pwmList = listLoader()
+    local pwmList = listLoader()
 
-  if not pwmList then
-    return "Error loading PWM list from C api.", 1
-  end
+    if not pwmList then
+        return "Error loading PWM list from C api.", 1
+    end
 
-  local outputArray = {}
+    local outputArray = {}
 
-  for i, v in ipairs(pwmList) do
-    local pin  = i
-    local freq = v[1]
-    local duty = v[2]
+    for i, v in ipairs(pwmList) do
+        local pin  = i
+        local freq = v[1]
+        local duty = v[2]
 
-    local lineArr = {}
-    table.insert(lineArr, padRight(tostring(pin)..".", 5))
-    table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
-    table.insert(lineArr, padRight(tostring(duty).."%", 6))
+        local lineArr = {}
+        table.insert(lineArr, padRight(tostring(pin)..".", 5))
+        table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
+        table.insert(lineArr, padRight(tostring(duty).."%", 6))
 
-    table.insert(outputArray, table.concat(lineArr).."\n")
-  end
+        table.insert(outputArray, table.concat(lineArr).."\n")
+    end
 
-  return table.concat(outputArray), 0
+    return table.concat(outputArray), 0
 end
 
 pwmInGetFreq = function(chan)
-  local numPWMs = getNumPWMIn()
+    local numPWMs = getNumPWMIn()
 
-  if chan < 1 or chan > numPWMs then
-    return "Channel must be between 1 and " .. tostring(numPWMs), 1
-  end
+    if chan < 1 or chan > numPWMs then
+        return "Channel must be between 1 and " .. tostring(numPWMs), 1
+    end
 
-  return getPwmInFrequency(chan), 0
+    return getPwmInFrequency(chan), 0
 end
 
 pwmInGetDuty = function(chan)
-  local numPWMs = getNumPWMIn()
+    local numPWMs = getNumPWMIn()
 
-  if chan < 1 or chan > numPWMs then
-    return "Channel must be between 1 and " .. tostring(numPWMs), 1
-  end
+    if chan < 1 or chan > numPWMs then
+        return "Channel must be between 1 and " .. tostring(numPWMs), 1
+    end
 
-  return getPwmInDutyCycle(chan), 0
+    return getPwmInDutyCycle(chan), 0
 end
 
 -- list all current hardware PWMs
