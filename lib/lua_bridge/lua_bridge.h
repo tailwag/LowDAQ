@@ -31,6 +31,8 @@
 
 extern lua_State* L;
 
+void _log(String msg); 
+
 bool loadLuaScript(const char* path);
 bool initLua(const char* scriptPath);
 void luaLoop();

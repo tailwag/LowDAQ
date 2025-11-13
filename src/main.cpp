@@ -10,30 +10,27 @@ void setup() {
     delay(1000);
 
     Serial.println();
-    Serial.println("Starting up ...");
+    _log("Starting up ...");
     delay(200);
 
 	// load main lua file. this defines the console behavior and 
 	// the main structure of the available commands
     if (!initLua("/main.lua")) {
-        Serial.println("Failed to initialize Lua!");
+        _log("Failed to initialize Lua!");
         while(true);
     }
-    
-    Serial.println("Loading include files: ");
+
+    _log("Loading include files: ");
 
     FileList * includeFiles = ls(includeDir);
 
     for (uint16_t i = 0; i < includeFiles->count; i++) {
         String filePath = String(includeDir) + String(includeFiles->names[i]);
 
-        if (!loadLuaScript(filePath.c_str())) {
-            Serial.print("Error loading include file: ");
-            Serial.println(filePath);
-        }
-        else {
-            Serial.println("    " + filePath + ": ✓");
-        }
+        if (!loadLuaScript(filePath.c_str())) 
+            _log("Error loading include file: " + String(filePath));
+        else
+            _log("    " + filePath + ": ✓");
     }
 
     Serial.println();

@@ -3,15 +3,8 @@
 #include <cstdint>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
-#include <sys/_intsup.h>
-
 #include "STM32DuinoPWM.hpp"
 #include "STM32DuinoCANFD.hpp"
-#include "WSerial.h"
-#include "lauxlib.h"
-#include "lua.h"
-#include "variant_NUCLEO_G474RE.h"
-#include "wiring_time.h"
 
 #ifdef ARDUINO_NUCLEO_G474RE
 #define OUTPUT_PWMS 1 
@@ -19,24 +12,24 @@
 #endif
 
 void _log(String msg) {
-  Serial.print("[");
-  Serial.print(millis()); 
-  Serial.print("] - "); 
-  Serial.println(msg);
+    Serial.print("[");
+    Serial.print(millis()); 
+    Serial.print("] - "); 
+    Serial.println(msg);
 }
 
 OutputPWM * pwmOut[OUTPUT_PWMS] = {
 #ifdef ARDUINO_NUCLEO_G474RE 
-      new OutputPWM(PA0),
+    new OutputPWM(PA0),
 #endif
 };
 
 InputPWM * pwmIn[INPUT_PWMS] = {
 #ifdef ARDUINO_NUCLEO_G474RE
-  new InputPWM(PC0, LOWFREQ), 
-  new InputPWM(PC1, LOWFREQ), 
-  new InputPWM(PC2, LOWFREQ), 
-  new InputPWM(PC3, LOWFREQ),
+    new InputPWM(PC0, LOWFREQ), 
+    new InputPWM(PC1, LOWFREQ), 
+    new InputPWM(PC2, LOWFREQ), 
+    new InputPWM(PC3, LOWFREQ),
 #endif // ARDUINO_NUCLEO_G474RE
 };
 
@@ -44,6 +37,12 @@ FDCanChannel can0(CH1, b500000, b2000000);
 Adafruit_ADS1115 adc0;
 
 lua_State* L;
+
+int lua_getSystemTime(lua_State* L) {
+    lua_pushinteger(L, millis());
+
+    return 1;
+}
 
 int lua_getNumPWMOut(lua_State* L) {
     lua_pushinteger(L, OUTPUT_PWMS);
@@ -55,7 +54,7 @@ int lua_getNumPWMOut(lua_State* L) {
 int lua_setPwmOutFrequency(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
     int freq = luaL_checkinteger(L, 2);
-    
+
     pwmOut[chan-1]->setFrequency(freq);
 
     return 0;
@@ -108,53 +107,51 @@ int lua_getPwmOutList(lua_State* L) {
 }
 
 int lua_getNumPWMIn(lua_State* L) {
-  lua_pushinteger(L, INPUT_PWMS);
+    lua_pushinteger(L, INPUT_PWMS);
 
-  return 1;
+    return 1;
 }
 
 int lua_getPwmInFrequency(lua_State* L) {
-  int chan = luaL_checkinteger(L, 1);
+    int chan = luaL_checkinteger(L, 1);
 
-  float freq = pwmIn[chan-1]->getFrequency(); 
+    float freq = pwmIn[chan-1]->getFrequency(); 
+    lua_pushnumber(L, freq); 
 
-  lua_pushnumber(L, freq); 
-
-  return 1; 
+    return 1; 
 }
 
 int lua_getPwmInDutyCycle(lua_State* L) {
-  int chan = luaL_checkinteger(L, 1);
-
-  float duty = pwmIn[chan-1]->getDutyCycle(); 
-
-  lua_pushnumber(L, duty);
-
-  return 1;
+    int chan = luaL_checkinteger(L, 1);
+    
+    float duty = pwmIn[chan-1]->getDutyCycle(); 
+    lua_pushnumber(L, duty);
+    
+    return 1;
 }
 
 int lua_getPwmInList(lua_State* L) {
-  char * pwmStrings[INPUT_PWMS];
-  uint8_t a = 0;
+    char * pwmStrings[INPUT_PWMS];
+    uint8_t a = 0;
 
-  String pushString = "return {";
-  for (auto &p : pwmIn) {
-    pushString += "{";
-    pushString += String(p->getFrequency()) + ",";
-    pushString += String(p->getDutyCycle()) + "},";
+    String pushString = "return {";
+    for (auto &p : pwmIn) {
+        pushString += "{";
+        pushString += String(p->getFrequency()) + ",";
+        pushString += String(p->getDutyCycle()) + "},";
 
-    ++a;
-  }
-  pushString += "}";
-
-  uint8_t sLen = pushString.length() + 1;
-
-  char pushArr[sLen];
-  pushString.toCharArray(pushArr, sLen);
-
-  lua_pushstring(L, pushArr); 
-
-  return 1;
+        ++a;
+    }
+    pushString += "}";
+ 
+    uint8_t sLen = pushString.length() + 1;
+ 
+    char pushArr[sLen];
+    pushString.toCharArray(pushArr, sLen);
+ 
+    lua_pushstring(L, pushArr); 
+ 
+    return 1;
 }
 
 // load a lua module file and return it as a string
@@ -254,7 +251,7 @@ int lua_print(lua_State* L) {
     int ret = luaPrintHandler(L); 
 
     Serial.println();
-    
+
     return ret;
 }
 
@@ -269,9 +266,9 @@ int lua_printf(lua_State* L) {
 int lua_serialRead(lua_State* L) {
     if (Serial.available() > 0)
         lua_pushinteger(L, Serial.read());
-    else 
+    else
         lua_pushinteger(L, -1);
-    
+
     return 1;
 }
 
@@ -332,7 +329,7 @@ bool initLua(const char* scriptPath) {
 
     _log("Start CAN-FD");
     can0.begin();
-   
+ 
     _log("Start PWM Output(s):");
     for (uint8_t i = 0; i < OUTPUT_PWMS; i++) {
       pwmOut[i]->begin();
