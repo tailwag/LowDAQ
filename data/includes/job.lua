@@ -8,7 +8,7 @@ jobAdd = function(job, period, description)
     period = tonumber(period)
 
     if not period or period < 1 then
-        return "invalid period, must be > 1 (ms)", 1
+        return "invalid period, must be >= 1 (ms)", 1
     end
 
     table.insert(jobs, {run = func, period = period, description = description, enabled = 1, lastSent = 0})
@@ -49,7 +49,7 @@ commands.jobAdd = {
 
     run = function() end
 }
-commands.jobAdd.run        = jobAdd
+commands.jobAdd.run = jobAdd
 
 
 commands.jobList = {

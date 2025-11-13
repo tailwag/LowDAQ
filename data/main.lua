@@ -32,7 +32,7 @@ end
 repeatChar = function(c, n)
     local chArray = {}
 
-    for i = 1, n do
+    for _ = 1, n do
         table.insert(chArray, c)
     end
 

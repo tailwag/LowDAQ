@@ -37,7 +37,7 @@ pwmInGetFreq = function(chan)
         return "Channel must be between 1 and " .. tostring(numPWMs), 1
     end
 
-    return getPwmInFrequency(chan), 0
+    return tonumber(getPwmInFrequency(chan)), 0
 end
 
 pwmInGetDuty = function(chan)
@@ -47,7 +47,7 @@ pwmInGetDuty = function(chan)
         return "Channel must be between 1 and " .. tostring(numPWMs), 1
     end
 
-    return getPwmInDutyCycle(chan), 0
+    return tonumber(getPwmInDutyCycle(chan)), 0
 end
 
 -- list all current hardware PWMs
