@@ -20,6 +20,7 @@ C/C++ backend, Lua frontend.
 ## Examples 
 
 The help menu:
+
      LowDAQ > help()
      ============================================ Low Level DAQ System ============================================
      == General Commands                                                                                         ==
