@@ -1,9 +1,10 @@
 rvcSetMode = function(mode, val) 
-    if mode == "help" then 
-        local retString = ""
-        retString = retString .. "targetVolt - set generator output to specific voltage\n"
-        retString = retString .. "targetSOC  - modulate generator output to target battery SOC\n"
-        retString = retString .. "capVolt    - use RVC signal from vehicle with a voltage cap\n"
+    if mode == "help" then
+        local retString = "Use PWM input 1 and PWM output 1 to control RVC\n"
+        retString = retString .. "Modes:\n"
+        retString = retString .. "  targetVolt - set generator output to specific voltage\n"
+        retString = retString .. "  targetSOC  - modulate generator output to target battery SOC\n"
+        retString = retString .. "  capVolt    - use RVC signal from vehicle with a voltage cap\n"
 
         return retString, 0
     end
@@ -90,7 +91,7 @@ end
 
 commands.rvcSetMode = {
     helpCategory    = "RVC Commands",
-    helpArguments   = {"[help|targetVolt|targetSOC|capVolt], value"},
+    helpArguments   = {"[help|(mode)], value"},
     helpDescription = "change which mode the RVC module operates in",
 
     run = function() end
