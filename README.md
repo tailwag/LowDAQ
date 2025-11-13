@@ -12,7 +12,47 @@ C/C++ backend, Lua frontend.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
+* This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
 
 ## Acknowledgements
 * World of Warcraft - wouldn't have learned Lua if I wasn't writing sweaty combat addons
+
+## Examples 
+
+The help menu:
+     LowDAQ > help()
+     ============================================ Low Level DAQ System ============================================
+     == General Commands                                                                                         ==
+     ==    exec(code)                                  - run lua code directly                                   ==
+     ==    help()                                      - display this menu                                       ==
+     ==    testFloats()                                - print floating point number tests                       ==
+     ==                                                                                                          ==
+     == ADC Commands                                                                                             ==
+     ==    adcList()                                   - list the configuration of the available adc channels    ==
+     ==    adcRead(channel)                            - get a voltage measurement from the ADC                  ==
+     ==    adcSetChannel(channel, scale, offset, unit) - set scaling and offset for a channel                    ==
+     ==                                                                                                          ==
+     == Job Scripting Commands                                                                                   ==
+     ==    jobAdd(function(), period(ms), description) - schedule a job to occur peridically                     ==
+     ==    jobList()                                   - list current jobs                                       ==
+     ==    jobToggle(index, [0|1])                     - toggle a job on or off                                  ==
+     ==                                                                                                          ==
+     == PWM Commands                                                                                             ==
+     ==    pwmInGetDuty(pin)                           - measure duty cycle of pwm input                         ==
+     ==    pwmInGetFreq(pin)                           - measure frequency of pwm input                          ==
+     ==    pwmInList()                                 - show state of all pwm inputs                            ==
+     ==    pwmOutList()                                - show state of all pwm outputs                           ==
+     ==    pwmOutSet(pin, frequency, dutycycle)        - sets up a pwm output, defaults to on                    ==
+     ==    pwmOutToggle(pin, [0|1])                    - toggles a pwm output on or off                          ==
+     ==                                                                                                          ==
+     == Periodic CAN Frame Commands                                                                              ==
+     ==    pfByteSet(id, index, value)                 - update the value of one byte                            ==
+     ==    pfDlcSet(id, value)                         - update the length of a periodic frame                   ==
+     ==    pfList()                                    - returns list of all periodic frames                     ==
+     ==    pfTimeSet(id, ms)                           - adjust the period of a frame                            ==
+     ==    pfToggle(id, [0,1])                         - toggles a periodic frame on or off                      ==
+     ==                                                                                                          ==
+     == Single Shot CAN Frame Commands                                                                           ==
+     ==    ssSend(id, dlc, data1, data2, ...)          - send a can frame once                                   ==
+     ==                                                                                                          ==
+     ==============================================================================================================
