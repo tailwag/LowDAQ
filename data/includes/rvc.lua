@@ -1,99 +1,147 @@
-rvcSetMode = function(mode, val) 
-    if mode == "help" then
-        local retString = "Use PWM input 1 and PWM output 1 to control RVC\n"
-        retString = retString .. "Modes:\n"
-        retString = retString .. "  targetVolt - set generator output to specific voltage\n"
-        retString = retString .. "  targetSOC  - modulate generator output to target battery SOC\n"
-        retString = retString .. "  capVolt    - use RVC signal from vehicle with a voltage cap\n"
-
-        return retString, 0
+rvcTargetVolt = function(val)
+    if not val or val < 11.5 or val > 15.5 then
+        return "value must be between 11.5 and 15.5", 1
     end
 
-    if not val then
-        return "Must supply a target value", 1
+    local dutyCycle = val * 20 - 220
+
+    local rvcFunc = function()
+        pwmOutSet(1, 128, dutyCycle)
     end
 
-    if mode == "targetSOC"  then
-        if val < 10 or val > 100 then
-            return "SOC must be between 10 and 100%", 1
+    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="targetVolt", rvcSP=dutyCycle}
+
+    local jobId
+
+    for i, v in ipairs(jobs) do
+        if v.rvcMode then
+            jobId = i
+            break
         end
-
-        return nil
-
-    elseif mode == "targetVolt" then
-        if val < 11.5 or val > 15.5 then
-            return "Voltage must be between 11.5 and 15.5", 1
-        end
-
-        local dutyCycle = val * 20 - 220
-
-        local rvcFunc = function()
-            pwmOutSet(1, 128, dutyCycle)
-        end
-
-        local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, sig="rvc"}
-
-        local jobId
-
-        for i, v in ipairs(jobs) do
-            if v.sig and v.sig == "rvc" then
-                jobId = i
-                break
-            end
-        end
-
-        if jobId then
-            jobs[jobId] = job
-        else
-            table.insert(jobs, job)
-        end
-
-        return nil, 0
-
-    elseif mode == "capVolt" then
-        if val < 11.5 or val > 15.5 then
-            return "Voltage must be between 11.5 and 15.5"
-        end
-
-        local maxDutyCycle = val * 20 - 220
-
-        local rvcFunc = function()
-            local ecuRequestDC = math.floor(pwmInGetDuty(1) + 0.5)
-
-            local dutyCycle = ecuRequestDC >= 10 and ecuRequestDC or 10
-            dutyCycle = dutyCycle < maxDutyCycle and dutyCycle or maxDutyCycle
-
-            pwmOutSet(1, 128, dutyCycle)
-        end
-
-        local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, sig="rvc"}
-
-        local jobId
-
-        for i, v in ipairs(jobs) do
-            if v.sig and v.sig == "rvc" then
-                jobId = i
-                break
-            end
-        end
-
-        if jobId then
-            jobs[jobId] = job
-        else
-            table.insert(jobs, job)
-        end
-
-        return nil, 0
     end
 
-    return "Invalid mode specified", 1
+    if jobId then
+        jobs[jobId] = job
+    else
+        table.insert(jobs, job)
+    end
+
+    return nil, 0
 end
 
-commands.rvcSetMode = {
-    helpCategory    = "RVC Commands",
-    helpArguments   = {"[help|(mode)], value"},
-    helpDescription = "change which mode the RVC module operates in",
+rvcCapVolt = function(val)
+    if not val or val < 11.5 or val > 15.5 then
+        return "value must be between 11.5 and 15.5", 1
+    end
+
+    local maxDutyCycle = val * 20 - 220
+    local dutyCycle
+    local rvcFunc = function()
+        local ecuRequestDC = math.floor(pwmInGetDuty(1) + 0.5)
+
+        dutyCycle = ecuRequestDC >= 10 and ecuRequestDC or 10
+        dutyCycle = dutyCycle < maxDutyCycle and dutyCycle or maxDutyCycle
+
+        pwmOutSet(1, 128, dutyCycle)
+    end
+
+    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="capVolt", rvcSP=dutyCycle}
+
+    local jobId
+
+    for i, v in ipairs(jobs) do
+        if v.rvcMode then
+            jobId = i
+            break
+        end
+    end
+
+    if jobId then
+        jobs[jobId] = job
+    else
+        table.insert(jobs, job)
+    end
+
+    return nil, 0
+end
+
+rvcTargetSOC = function(val)
+    return "not implemented yet", 1
+end
+
+rvcGetMode = function()
+    for _, v in ipairs(jobs) do
+        if v.rvcMode then
+            return v.rvcMode, 0
+        end
+    end
+    return "RVC output not enabled", 1
+end
+
+rvcGetSetpoint = function()
+    for _, v in ipairs(jobs) do
+        if v.rvcSP then
+            return v.rvcSP, 0
+        end
+    end
+    return "RVC output not enabled", 1
+end
+
+
+rvcDisable = function()
+    for i, v in ipairs(jobs) do
+        if v.rvcMode then
+            pwmOutSet(1, 128, 0)
+            jobs[i] = nil
+            return nil, 0
+        end
+    end
+    return "RVC output not enabled", 1
+end
+
+commands.rvcGetMode         = {
+    helpCategory            = "RVC Commands",
+    helpDescription         = "return the current set RVC mode",
+}
+commands.rvcGetMode.run     = rvcGetMode
+
+commands.rvcGetSetpoint     = {
+    helpCategory            = "RVC Commands",
+    helpDescription         = "return the current RVC setpoint",
+}
+commands.rvcGetSetpoint.run = rvcGetSetpoint
+
+commands.rvcDisable         = {
+    helpCategory            = "RVC Commands",
+    helpDescription         = "disable the RVC output",
 
     run = function() end
 }
-commands.rvcSetMode.run = rvcSetMode
+commands.rvcDisable.run     = rvcDisable
+
+commands.rvcTargetVolt      = {
+    helpCategory            = "RVC Commands",
+    helpArguments           = {"value"},
+    helpDescription         = "sets the rvc output to [value]",
+
+    run = function() end
+}
+commands.rvcTargetVolt.run  = rvcTargetVolt
+
+commands.rvcCapVolt         = {
+    helpCategory            = "RVC Commands",
+    helpArguments           = {"value"},
+    helpDescription         = "use the ECU's RVC value up to [value]",
+
+    run = function() end
+}
+commands.rvcCapVolt.run     = rvcCapVolt
+
+commands.rvcTargetSOC       = {
+    helpCategory            = "RVC Commands",
+    helpArguments           = {"value"},
+    helpDescription         = "attempt to modulate RVC to target an SOC value",
+
+    run = function() end
+}
+commands.rvcTargetSOC.run   = rvcTargetSOC

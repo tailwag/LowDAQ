@@ -123,10 +123,10 @@ int lua_getPwmInFrequency(lua_State* L) {
 
 int lua_getPwmInDutyCycle(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
-    
+
     float duty = pwmIn[chan-1]->getDutyCycle(); 
     lua_pushnumber(L, duty);
-    
+
     return 1;
 }
 
