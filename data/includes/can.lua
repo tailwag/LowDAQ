@@ -165,3 +165,5 @@ commands.ssSend = {
   helpDescription = "send a can frame once",
 }
 commands.ssSend.run  = ssSend
+
+table.insert(LoadedModules, "can")

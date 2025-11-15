@@ -1,18 +1,7 @@
-rvcTargetVolt = function(val)
-    if not val or val < 11.5 or val > 15.5 then
-        return "value must be between 11.5 and 15.5", 1
-    end
-
-    local dutyCycle = val * 20 - 220
-
-    local rvcFunc = function()
-        pwmOutSet(1, 128, dutyCycle)
-    end
-
-    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="targetVolt", rvcSP=dutyCycle}
-
+local updateRvcJob = function(job)
     local jobId
 
+    -- determine if rvc job already exists
     for i, v in ipairs(jobs) do
         if v.rvcMode then
             jobId = i
@@ -20,6 +9,7 @@ rvcTargetVolt = function(val)
         end
     end
 
+    -- if rvc job exsits update it, if not, create it
     if jobId then
         jobs[jobId] = job
     else
@@ -29,16 +19,39 @@ rvcTargetVolt = function(val)
     return nil, 0
 end
 
+rvcTargetVolt = function(val)
+    if not val or val < 11.5 or val > 15.5 then
+        return "value must be between 11.5 and 15.5", 1
+    end
+
+    -- calculate pwm for requested voltage
+    local dutyCycle = val * 20 - 220
+
+    -- this function is what gets called periodically by the jobs table
+    local rvcFunc = function()
+        pwmOutSet(1, 128, dutyCycle)
+    end
+
+    local job = {run=rvcFunc, period=1000, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="targetVolt", rvcSP=dutyCycle}
+
+    return updateRvcJob(job)
+end
+
 rvcCapVolt = function(val)
     if not val or val < 11.5 or val > 15.5 then
         return "value must be between 11.5 and 15.5", 1
     end
 
+    -- maxDutyCycle is the capped voltage converted to rvc dc %
     local maxDutyCycle = val * 20 - 220
     local dutyCycle
+
+    -- this function is what gets called periodically by the jobs table
     local rvcFunc = function()
+        -- duty cycle output from the ECU 
         local ecuRequestDC = math.floor(pwmInGetDuty(1) + 0.5)
 
+        -- set lower then upper limits
         dutyCycle = ecuRequestDC >= 10 and ecuRequestDC or 10
         dutyCycle = dutyCycle < maxDutyCycle and dutyCycle or maxDutyCycle
 
@@ -47,22 +60,7 @@ rvcCapVolt = function(val)
 
     local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="capVolt", rvcSP=dutyCycle}
 
-    local jobId
-
-    for i, v in ipairs(jobs) do
-        if v.rvcMode then
-            jobId = i
-            break
-        end
-    end
-
-    if jobId then
-        jobs[jobId] = job
-    else
-        table.insert(jobs, job)
-    end
-
-    return nil, 0
+    return updateRvcJob(job)
 end
 
 rvcTargetSOC = function(val)
@@ -137,3 +135,5 @@ commands.rvcTargetSOC       = {
     helpDescription         = "attempt to modulate RVC to target an SOC value",
 }
 commands.rvcTargetSOC.run   = rvcTargetSOC
+
+table.insert(LoadedModules, "rvc")

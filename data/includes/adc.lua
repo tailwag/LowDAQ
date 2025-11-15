@@ -100,3 +100,5 @@ commands.adcSetChannel = {
     helpDescription = "set scaling and offset for a channel",
 }
 commands.adcSetChannel.run = adcSetChannel
+
+table.insert(LoadedModules, "adc")

@@ -188,3 +188,5 @@ commands.pwmOutToggle = {
     helpDescription   = "toggles a pwm output on or off",
 }
 commands.pwmOutToggle.run = pwmOutToggle
+
+table.insert(LoadedModules, "pwm")

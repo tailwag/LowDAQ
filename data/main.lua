@@ -2,6 +2,15 @@
 ------- main.lua - all logic and baseline functions (non user called) ------
 -------            should reside here. user functions in func.lua     ------
 ----------------------------------------------------------------------------
+LoadedModules = {}
+ModuleIsLoaded = function(module)
+    for _, v in ipairs(LoadedModules) do
+        if v == module then
+            return true
+        end
+    end
+    return false
+end
 
 -- periodic can frames
 frames = {}

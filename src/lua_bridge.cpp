@@ -5,11 +5,19 @@
 #include <Adafruit_ADS1X15.h>
 #include "STM32DuinoPWM.hpp"
 #include "STM32DuinoCANFD.hpp"
+#include "lauxlib.h"
+#include "lua.h"
 
 #ifdef ARDUINO_NUCLEO_G474RE
 #define OUTPUT_PWMS 1 
 #define INPUT_PWMS 4
 #endif
+
+enum LuaSignalType {
+    UNSIGNED = 1,
+    SIGNED = 2, 
+    FLOAT = 4,
+};
 
 void _log(String msg) {
     Serial.print("[");
@@ -32,6 +40,8 @@ InputPWM * pwmIn[INPUT_PWMS] = {
     new InputPWM(PC3, LOWFREQ),
 #endif // ARDUINO_NUCLEO_G474RE
 };
+
+CanFrame* LuaSendFrame = new CanFrame();
 
 FDCanChannel can0(CH1, b500000, b2000000);
 Adafruit_ADS1115 adc0;
@@ -272,6 +282,39 @@ int lua_serialRead(lua_State* L) {
     return 1;
 }
 
+int lua_hrcReset(lua_State* L) {
+    uint16_t canId = luaL_checkinteger(L, 1);
+    uint8_t canDlc = luaL_checkinteger(L, 2);
+
+    LuaSendFrame->canId  = canId;
+    LuaSendFrame->canDlc = canDlc;
+    LuaSendFrame->clear();
+
+    return 1;
+}
+
+int lua_hrcSetValue(lua_State* L) {
+    float       value =  luaL_checknumber(L, 1);
+    uint16_t startBit = luaL_checkinteger(L, 2);
+    uint8_t    length = luaL_checkinteger(L, 3);
+    uint8_t      type = luaL_checkinteger(L, 4);
+    Endian order = (Endian)luaL_checkinteger(L, 5);
+
+    switch (type) {
+        case UNSIGNED: LuaSendFrame->SetUnsigned(value, startBit, length, order); break; 
+        case SIGNED  : LuaSendFrame->SetSigned  (value, startBit, length, order); break;
+        case FLOAT   : LuaSendFrame->SetFloat   (value, startBit, length, order); break;
+    };
+
+    return 1;
+}
+
+int lua_hrcSend(lua_State* L) {
+    can0.sendFrame(LuaSendFrame);
+
+    return 1;
+}
+
 // Register functions
 void registerLuaFunctions(lua_State* L) {
     lua_register(L, "millis", lua_millis);
@@ -291,6 +334,9 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "getPwmInFrequency", lua_getPwmInFrequency); 
     lua_register(L, "getPwmInDutyCycle", lua_getPwmInDutyCycle);
     lua_register(L, "getPwmInList", lua_getPwmInList);
+    lua_register(L, "C_hrcReset", lua_hrcReset);
+    lua_register(L, "C_hrcSetValue", lua_hrcSetValue); 
+    lua_register(L, "C_hrcSend", lua_hrcSend);
 }
 
 bool loadLuaScript(const char* path) {

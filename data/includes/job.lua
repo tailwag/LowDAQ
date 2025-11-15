@@ -60,3 +60,5 @@ commands.jobToggle = {
     helpDescription = "toggle a job on or off",
 }
 commands.jobToggle.run     = jobToggle
+
+table.insert(LoadedModules, "job")
