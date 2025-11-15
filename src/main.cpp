@@ -22,6 +22,7 @@ void setup() {
 
     _log("Loading include files: ");
 
+    // load include files
     FileList * includeFiles = ls(includeDir);
 
     for (uint16_t i = 0; i < includeFiles->count; i++) {
@@ -44,7 +45,7 @@ void setup() {
     Serial.println("**      Devin Shoemaker, 2025 - devin@shoemaker.info     **");
     Serial.println("***********************************************************");
     Serial.println();
-    Serial.print("LowDAQ >");
+    Serial.print("LowDAQ > ");
 }
 
 void loop() {

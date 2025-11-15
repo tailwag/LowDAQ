@@ -216,7 +216,7 @@ int lua_adcReadDiff(lua_State* L) {
 
     lua_pushnumber(L, (float)result * multiplier);
 
-    return 1;    
+    return 1;
 }
 
 int lua_floatToString(lua_State* L) {
@@ -224,7 +224,7 @@ int lua_floatToString(lua_State* L) {
     char buf[16]; 
 
     snprintf(buf, sizeof(buf), "%.3f", floatIn);
-    lua_pushstring(L, buf); 
+    lua_pushstring(L, buf);
 
     return 1;
 }
