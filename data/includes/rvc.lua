@@ -29,10 +29,25 @@ rvcTargetVolt = function(val)
 
     -- this function is what gets called periodically by the jobs table
     local rvcFunc = function()
+        if ModuleIsLoaded("hrc") then
+            -- duty cycle output from the ECU 
+            local ecuRequestDC = math.floor(pwmInGetDuty(1) + 0.5)
+
+            hrcReset(0x7EA, 7)
+            hrcSetValue(ecuRequestDC, 0, 8, "unsigned") -- ECUreqDC  value, raw
+            hrcSetValue(ecuRequestDC, 8, 8, "unsigned") -- ECUreqVlt value, scale = 0.05, offset = 11
+            hrcSetValue(dutyCycle,   16, 8, "unsigned") -- RVCoutDC  value, raw
+            hrcSetValue(dutyCycle,   24, 8, "unsigned") -- RVCoutVlt value, scale = 0.05, offset = 11
+            hrcSetValue(dutyCycle,   32, 8, "unsigned") -- RVCmaxDC  value, raw
+            hrcSetValue(dutyCycle,   40, 8, "unsigned") -- RVCmaxVlt value, scale = 0.05, offset = 11
+            hrcSetValue(1,           48, 2, "unsigned") -- RVCmode   value, 1 = targetVolt, 2 = capVolt, 3 = targetSOC
+            hrcSend()
+        end
+
         pwmOutSet(1, 128, dutyCycle)
     end
 
-    local job = {run=rvcFunc, period=1000, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="targetVolt", rvcSP=dutyCycle}
+    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="targetVolt", rvcSP=dutyCycle}
 
     return updateRvcJob(job)
 end
@@ -55,10 +70,23 @@ rvcCapVolt = function(val)
         dutyCycle = ecuRequestDC >= 10 and ecuRequestDC or 10
         dutyCycle = dutyCycle < maxDutyCycle and dutyCycle or maxDutyCycle
 
+        -- human readable can module
+        if ModuleIsLoaded("hrc") then
+            hrcReset(0x7EA, 7)
+            hrcSetValue(ecuRequestDC,  0, 8, "unsigned") -- ECUreqDC  value, raw
+            hrcSetValue(ecuRequestDC,  8, 8, "unsigned") -- ECUreqVlt value, scale = 0.05, offset = 11
+            hrcSetValue(dutyCycle,    16, 8, "unsigned") -- RVCoutDC  value, raw
+            hrcSetValue(dutyCycle,    24, 8, "unsigned") -- RVCoutVlt value, scale = 0.05, offset = 11
+            hrcSetValue(maxDutyCycle, 32, 8, "unsigned") -- RVCmaxDC  value, raw
+            hrcSetValue(maxDutyCycle, 40, 8, "unsigned") -- RVCmaxVlt value, scale = 0.05, offset = 11
+            hrcSetValue(2,            48, 2, "unsigned") -- RVCmode   value, 1 = targetVolt, 2 = capVolt, 3 = targetSOC
+            hrcSend()
+        end
+
         pwmOutSet(1, 128, dutyCycle)
     end
 
-    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="capVolt", rvcSP=dutyCycle}
+    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="capVolt", rvcSP=maxDutyCycle}
 
     return updateRvcJob(job)
 end
