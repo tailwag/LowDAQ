@@ -42,30 +42,16 @@ end
 --- add all definied commands to the command parser in main.lua ---
 -------------------------------------------------------------------
 
-commands.jobAdd = {
-    helpCategory    = "Job Scripting Commands",
-    helpArguments   = {"function()", "period(ms)", "description"},
-    helpDescription = "schedule a job to occur peridically",
-
-    run = function() end
-}
+commands.jobAdd.helpCategory       = "Job Scripting Commands"
+commands.jobAdd.helpArguments      = {"function()", "period(ms)", "description"}
+commands.jobAdd.helpDescription    = "schedule a job to occur peridically"
 commands.jobAdd.run = jobAdd
 
+commands.jobList.helpCategory      = "Job Scripting Commands"
+commands.jobList.helpDescription   = "list current jobs"
+commands.jobList.run = jobList
 
-commands.jobList = {
-    helpCategory    = "Job Scripting Commands",
-    helpDescription = "list current jobs",
-
-    run = function() end
-}
-commands.jobList.run       = jobList
-
-
-commands.jobToggle = {
-    helpCategory    = "Job Scripting Commands",
-    helpArguments   = {"index", "[0|1]"},
-    helpDescription = "toggle a job on or off",
-
-    run = function() end
-}
-commands.jobToggle.run     = jobToggle
+commands.jobToggle.helpCategory    = "Job Scripting Commands"
+commands.jobToggle.helpArguments   = {"index", "[0|1]"}
+commands.jobToggle.helpDescription = "toggle a job on or off"
+commands.jobToggle.run = jobToggle

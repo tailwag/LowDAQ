@@ -4,9 +4,7 @@
 ----------------------------------------------------------------------------
 
 -- periodic can frames
-frames = {
-    {id=0x7FF, dlc=8, period=1000, data={0,64,128,255,96,1,2,4}, enabled=true, lastSent=0}
-}
+frames = {}
 
 -- periodic jobs (cron)
 jobs = {}

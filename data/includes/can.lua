@@ -124,61 +124,31 @@ end
 -------------------------------------------------------------------
 --- add all definied commands to the command parser in main.lua ---
 -------------------------------------------------------------------
+commands.pfList.helpCategory       = "Periodic CAN Frame Commands"
+commands.pfList.helpDescription    = "returns list of all periodic frames"
+commands.pfList.run = pfList
 
-commands.pfList = {
-    helpCategory    = "Periodic CAN Frame Commands",
-    helpArguments   = {""},
-    helpDescription = "returns list of all periodic frames",
+commands.pfToggle.helpCategory     = "Periodic CAN Frame Commands"
+commands.pfToggle.helpArguments    = {"id", "[0,1]"}
+commands.pfToggle.helpDescription  = "toggles a periodic frame on or off"
+commands.pfToggle.run = pfToggle
 
-    run = function() end
-}
-commands.pfList.run        = pfList
+commands.pfByteSet.helpCategory    = "Periodic CAN Frame Commands"
+commands.pfByteSet.helpArguments   = {"id", "index", "value"}
+commands.pfByteSet.helpDescription = "update the value of one byte"
+commands.pfByteSet.run = pfByteSet
 
+commands.pfDlcSet.helpCategory     = "Periodic CAN Frame Commands"
+commands.pfDlcSet.helpArguments    = {"id", "value"}
+commands.pfDlcSet.helpDescription  = "update the length of a periodic frame"
+commands.pfDlcSet.run = pfDlcSet
 
-commands.pfToggle = {
-    helpCategory    = "Periodic CAN Frame Commands",
-    helpArguments   = {"id", "[0,1]"},
-    helpDescription = "toggles a periodic frame on or off",
+commands.pfTimeSet.helpCategory    = "Periodic CAN Frame Commands"
+commands.pfTimeSet.helpArguments   = {"id", "ms"}
+commands.pfTimeSet.helpDescription = "adjust the period of a frame"
+commands.pfTimeSet.run = pfTimeSet
 
-    run = function() end
-}
-commands.pfToggle.run      = pfToggle
-
-
-commands.pfByteSet = {
-    helpCategory    = "Periodic CAN Frame Commands",
-    helpArguments   = {"id", "index", "value"},
-    helpDescription = "update the value of one byte",
-
-    run = function() end
-}
-commands.pfByteSet.run     = pfByteSet
-
-
-commands.pfDlcSet = {
-    helpCategory    = "Periodic CAN Frame Commands",
-    helpArguments   = {"id", "value"},
-    helpDescription = "update the length of a periodic frame",
-
-    run = function() end
-}
-commands.pfDlcSet.run      = pfDlcSet
-
-
-commands.pfTimeSet = {
-    helpCategory    = "Periodic CAN Frame Commands",
-    helpArguments   = {"id", "ms"},
-    helpDescription = "adjust the period of a frame",
-
-    run = function() end
-}
-commands.pfTimeSet.run     = pfTimeSet
-
-commands.ssSend = {
-  helpCategory    = "Single Shot CAN Frame Commands", 
-  helpArguments   = {"id", "dlc", "data1", "data2", "..."},
-  helpDescription = "send a can frame once",
-
-  run = function () end
-}
+commands.ssSend.helpCategory       = "Single Shot CAN Frame Commands"
+commands.ssSend.helpArguments      = {"id", "dlc", "data1", "data2", "..."}
+commands.ssSend.helpDescription    = "send a can frame once"
 commands.ssSend.run  = ssSend

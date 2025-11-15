@@ -81,30 +81,16 @@ end
 -------------------------------------------------------------------
 --- add all definied commands to the command parser in main.lua ---
 -------------------------------------------------------------------
-commands.adcRead = {
-    helpCategory    = "ADC Commands",
-    helpArguments   = {"channel"},
-    helpDescription = "get a voltage measurement from the ADC",
+commands.adcRead.helpCategory          = "ADC Commands"
+commands.adcRead.helpArguments         = {"channel"}
+commands.adcRead.helpDescription       = "get a voltage measurement from the ADC"
+commands.adcRead.run = adcRead
 
-    run = function() end
-}
-commands.adcRead.run       = adcRead
+commands.adcList.helpCategory          = "ADC Commands"
+commands.adcList.helpDescription       = "list the configuration of the available adc channels"
+commands.adcList.run = adcList
 
-
-commands.adcList = {
-    helpCategory    = "ADC Commands",
-    helpDescription = "list the configuration of the available adc channels",
-
-    run = function() end
-}
-commands.adcList.run       = adcList
-
-
-commands.adcSetChannel = {
-    helpCategory    = "ADC Commands",
-    helpArguments   = {"channel", "scale", "offset", "unit"},
-    helpDescription = "set scaling and offset for a channel",
-
-    run = function() end
-}
+commands.adcSetChannel.helpCategory    = "ADC Commands"
+commands.adcSetChannel.helpArguments   = {"channel", "scale", "offset", "unit"}
+commands.adcSetChannel.helpDescription = "set scaling and offset for a channel"
 commands.adcSetChannel.run = adcSetChannel

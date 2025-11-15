@@ -149,57 +149,30 @@ end
 -------------------------------------------------------------------
 --- add all definied commands to the command parser in main.lua ---
 -------------------------------------------------------------------
-
-commands.pwmInList  = {
-    helpCategory    = "PWM Commands",
-    helpDescription = "show state of all pwm inputs",
-
-    run = function() end
-}
+commands.pwmInList.helpCategory       = "PWM Commands"
+commands.pwmInList.helpDescription    = "show state of all pwm inputs"
 commands.pwmInList.run = pwmInList
 
-commands.pwmInGetFreq = {
-    helpCategory      = "PWM Commands",
-    helpDescription   = "measure frequency of pwm input",
-    helpArguments     = {"pin"},
-
-    run = function() end
-}
+commands.pwmInGetFreq.helpCategory    = "PWM Commands"
+commands.pwmInGetFreq.helpDescription = "measure frequency of pwm input"
+commands.pwmInGetFreq.helpArguments   = {"pin"}
 commands.pwmInGetFreq.run = pwmInGetFreq
 
-commands.pwmInGetDuty = {
-    helpCategory      = "PWM Commands",
-    helpDescription   = "measure duty cycle of pwm input",
-    helpArguments     = {"pin"},
-
-    run = function() end
-}
+commands.pwmInGetDuty.helpCategory    = "PWM Commands"
+commands.pwmInGetDuty.helpDescription = "measure duty cycle of pwm input"
+commands.pwmInGetDuty.helpArguments   = {"pin"}
 commands.pwmInGetDuty.run = pwmInGetDuty
 
-commands.pwmOutList = {
-    helpCategory    = "PWM Commands",
-    helpDescription = "show state of all pwm outputs",
+commands.pwmOutList.helpCategory      = "PWM Commands"
+commands.pwmOutList.helpDescription   = "show state of all pwm outputs"
+commands.pwmOutList.run = pwmOutList
 
-    run = function() end
-}
-commands.pwmOutList.run       = pwmOutList
+commands.pwmOutSet.helpCategory       = "PWM Commands"
+commands.pwmOutSet.helpArguments      = {"pin", "frequency", "dutycycle"}
+commands.pwmOutSet.helpDescription    = "sets up a pwm output, defaults to on"
+commands.pwmOutSet.run = pwmOutSet
 
-
-commands.pwmOutSet = {
-    helpCategory    = "PWM Commands",
-    helpArguments   = {"pin", "frequency", "dutycycle"},
-    helpDescription = "sets up a pwm output, defaults to on",
-
-    run = function() end
-}
-commands.pwmOutSet.run        = pwmOutSet
-
-
-commands.pwmOutToggle = {
-    helpCategory    = "PWM Commands",
-    helpArguments   = {"pin", "[0|1]"},
-    helpDescription = "toggles a pwm output on or off",
-
-    run = function() end
-}
-commands.pwmOutToggle.run     = pwmOutToggle
+commands.pwmOutToggle.helpCategory    = "PWM Commands"
+commands.pwmOutToggle.helpArguments   = {"pin", "[0|1]"}
+commands.pwmOutToggle.helpDescription = "toggles a pwm output on or off"
+commands.pwmOutToggle.run = pwmOutToggle

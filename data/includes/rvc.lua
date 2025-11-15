@@ -99,49 +99,29 @@ rvcDisable = function()
     return "RVC output not enabled", 1
 end
 
-commands.rvcGetMode         = {
-    helpCategory            = "RVC Commands",
-    helpDescription         = "return the current set RVC mode",
-}
-commands.rvcGetMode.run     = rvcGetMode
+commands.rvcGetMode.helpCategory        = "RVC Commands"
+commands.rvcGetMode.helpDescription     = "return the current set RVC mode"
+commands.rvcGetMode.run = rvcGetMode
 
-commands.rvcGetSetpoint     = {
-    helpCategory            = "RVC Commands",
-    helpDescription         = "return the current RVC setpoint",
-}
+commands.rvcGetSetpoint.helpCategory    = "RVC Commands"
+commands.rvcGetSetpoint.helpDescription = "return the current RVC setpoint"
 commands.rvcGetSetpoint.run = rvcGetSetpoint
 
-commands.rvcDisable         = {
-    helpCategory            = "RVC Commands",
-    helpDescription         = "disable the RVC output",
+commands.rvcDisable.helpCategory        = "RVC Commands"
+commands.rvcDisable.helpDescription     = "disable the RVC output"
+commands.rvcDisable.run = rvcDisable
 
-    run = function() end
-}
-commands.rvcDisable.run     = rvcDisable
+commands.rvcTargetVolt.helpCategory     = "RVC Commands"
+commands.rvcTargetVolt.helpArguments    = {"value"}
+commands.rvcTargetVolt.helpDescription  = "sets the rvc output to [value]"
+commands.rvcTargetVolt.run = rvcTargetVolt
 
-commands.rvcTargetVolt      = {
-    helpCategory            = "RVC Commands",
-    helpArguments           = {"value"},
-    helpDescription         = "sets the rvc output to [value]",
+commands.rvcCapVolt.helpCategory        = "RVC Commands"
+commands.rvcCapVolt.helpArguments       = {"value"}
+commands.rvcCapVolt.helpDescription     = "use the ECU's RVC value up to [value]"
+commands.rvcCapVolt.run = rvcCapVolt
 
-    run = function() end
-}
-commands.rvcTargetVolt.run  = rvcTargetVolt
-
-commands.rvcCapVolt         = {
-    helpCategory            = "RVC Commands",
-    helpArguments           = {"value"},
-    helpDescription         = "use the ECU's RVC value up to [value]",
-
-    run = function() end
-}
-commands.rvcCapVolt.run     = rvcCapVolt
-
-commands.rvcTargetSOC       = {
-    helpCategory            = "RVC Commands",
-    helpArguments           = {"value"},
-    helpDescription         = "attempt to modulate RVC to target an SOC value",
-
-    run = function() end
-}
-commands.rvcTargetSOC.run   = rvcTargetSOC
+commands.rvcTargetSOC.helpCategory      = "RVC Commands"
+commands.rvcTargetSOC.helpArguments     = {"value"}
+commands.rvcTargetSOC.helpDescription   = "attempt to modulate RVC to target an SOC value"
+commands.rvcTargetSOC.run = rvcTargetSOC
