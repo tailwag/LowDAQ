@@ -4,7 +4,7 @@ exec = function(script)
     local func = load(script)
 
 	-- execute function
-    if func then
+    if func then 
         func()
     end
 
@@ -32,9 +32,16 @@ testFloats = function()
     return nil, 0
 end
 
-commands.exec.helpArguments    = {"code"}
-commands.exec.helpDescription  = "run lua code directly"
-commands.exec.run = exec
+-------------------------------------------------------------------
+--- add all definied commands to the command parser in main.lua ---
+-------------------------------------------------------------------
+commands.exec = {
+    helpArguments    = {"code"},
+    helpDescription  = "run lua code directly",
+}
+commands.exec.run          = exec
 
-commands.testFloats.helpDescription = "print floating point number tests",
+commands.testFloats = {
+    helpDescription = "print floating point number tests",
+}
 commands.testFloats.run    = testFloats
