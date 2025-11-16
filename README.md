@@ -14,8 +14,19 @@ C/C++ backend, Lua frontend.
 
 * This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details
 
+## Libraries
+
+* Devin Shoemaker - [STM32DuinoPWM](https://github.com/tailwag/STM32DuinoPWM)
+* Devin Shoemaker - [STM32DuinoCANFD](https://github.com/tailwag/STM32DuinoCANFD)
+* Arduino         - [SD Library](https://github.com/arduino-libraries/SD)
+* Adafruit        - [ADS1115 Library](https://github.com/adafruit/Adafruit_ADS1X15)
+* STM32Duino      - [HAL Libraries](https://github.com/stm32duino)
+
 ## Acknowledgements
-* World of Warcraft - wouldn't have learned Lua if I wasn't writing sweaty combat addons
+
+* The STM32Duino Project - thank you for allowing me to program these super powerful micros with ease
+* The Developers of Lua - being able to embed lua made this project so much more fun
+* World of Warcraft - wouldn't have learned lua if I wasn't writing sweaty combat addons
 
 ## Examples 
 
@@ -25,6 +36,7 @@ The help menu:
      ============================================ Low Level DAQ System ============================================
      == General Commands                                                                                         ==
      ==    exec(code)                                  - run lua code directly                                   ==
+     ==    free()                                      - check used memory in kb                                 ==
      ==    help()                                      - display this menu                                       ==
      ==    testFloats()                                - print floating point number tests                       ==
      ==                                                                                                          ==
@@ -32,6 +44,11 @@ The help menu:
      ==    adcList()                                   - list the configuration of the available adc channels    ==
      ==    adcRead(channel)                            - get a voltage measurement from the ADC                  ==
      ==    adcSetChannel(channel, scale, offset, unit) - set scaling and offset for a channel                    ==
+     ==                                                                                                          ==
+     == Human Readable CAN Commands                                                                              ==
+     ==    hrcReset(canId, canDlc)                     - clear the human readable frame                          ==
+     ==    hrcSend()                                   - send the hr frame                                       ==
+     ==    hrcSetValue(startBit, length, type, order)  - set a value, run hrcSetValue(help) for more info        ==
      ==                                                                                                          ==
      == Job Scripting Commands                                                                                   ==
      ==    jobAdd(function(), period(ms), description) - schedule a job to occur peridically                     ==
@@ -52,6 +69,14 @@ The help menu:
      ==    pfList()                                    - returns list of all periodic frames                     ==
      ==    pfTimeSet(id, ms)                           - adjust the period of a frame                            ==
      ==    pfToggle(id, [0,1])                         - toggles a periodic frame on or off                      ==
+     ==                                                                                                          ==
+     == RVC Commands                                                                                             ==
+     ==    rvcCapVolt(value)                           - use the ECU's RVC value up to [value]                   ==
+     ==    rvcDisable()                                - disable the RVC output                                  ==
+     ==    rvcGetMode()                                - return the current set RVC mode                         ==
+     ==    rvcGetSetpoint()                            - return the current RVC setpoint                         ==
+     ==    rvcTargetSOC(value)                         - attempt to modulate RVC to target an SOC value          ==
+     ==    rvcTargetVolt(value)                        - sets the rvc output to [value]                          ==
      ==                                                                                                          ==
      == Single Shot CAN Frame Commands                                                                           ==
      ==    ssSend(id, dlc, data1, data2, ...)          - send a can frame once                                   ==
