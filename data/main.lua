@@ -322,6 +322,7 @@ function parseCommand(str)
 
     invalidCommand()
     printPrompt()
+    collectgarbage()
 end
 
 function loop()

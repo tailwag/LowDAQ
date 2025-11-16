@@ -41,7 +41,7 @@ void setup() {
     Serial.println("**          |  |__| . | | | |  |  |     |  |  |          **");
     Serial.println("**          |_____|___|_____|____/|__|__|__  _|          **");
     Serial.println("**                                         |__|          **");
-    Serial.println("**  Low level data scquisition and logic control system. **");
+    Serial.println("**  Low level data acquisition and logic control system. **");
     Serial.println("**      Devin Shoemaker, 2025 - devin@shoemaker.info     **");
     Serial.println("***********************************************************");
     Serial.println();

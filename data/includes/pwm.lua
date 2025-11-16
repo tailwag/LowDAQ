@@ -1,5 +1,5 @@
 pwmInList = function()
-    local pwmListString = getPwmInList()
+    local pwmListString = C_getPwmInList()
     local listLoader, err = load(pwmListString)
 
     if not listLoader then
@@ -31,23 +31,23 @@ pwmInList = function()
 end
 
 pwmInGetFreq = function(chan)
-    local numPWMs = getNumPWMIn()
+    local numPWMs = C_getNumPWMIn()
 
     if chan < 1 or chan > numPWMs then
         return "Channel must be between 1 and " .. tostring(numPWMs), 1
     end
 
-    return tonumber(getPwmInFrequency(chan)), 0
+    return tonumber(C_getPwmInFrequency(chan)), 0
 end
 
 pwmInGetDuty = function(chan)
-    local numPWMs = getNumPWMIn()
+    local numPWMs = C_getNumPWMIn()
 
     if chan < 1 or chan > numPWMs then
         return "Channel must be between 1 and " .. tostring(numPWMs), 1
     end
 
-    return tonumber(getPwmInDutyCycle(chan)), 0
+    return tonumber(C_getPwmInDutyCycle(chan)), 0
 end
 
 -- list all current hardware PWMs
@@ -62,7 +62,7 @@ pwmOutList = function()
 	-- }
 
 	-- get the return string from c, and initialize function to get data out
-    local pwmListString = getPwmOutList()
+    local pwmListString = C_getPwmOutList()
     local listLoader, err = load(pwmListString)
 
 	-- if loader is nil then return error
@@ -103,7 +103,7 @@ end
 -- set the frequency and duty cycle of a pwm output
 pwmOutSet = function(chan, freq, dc)
 	-- get number of pwm outputs from c api
-    local numPWMs = getNumPWMOut()
+    local numPWMs = C_getNumPWMOut()
 
 	-- input sanitization
     if chan < 1 or chan > numPWMs then
@@ -119,8 +119,8 @@ pwmOutSet = function(chan, freq, dc)
     end
 
 	-- bound c functions defined in lua_bridge.cpp
-    setPwmOutFrequency(chan, freq)
-    setPwmOutDutyCycle(chan, dc)
+    C_setPwmOutFrequency(chan, freq)
+    C_setPwmOutDutyCycle(chan, dc)
 
     return nil, 0
 end
@@ -129,7 +129,7 @@ end
 -- toggles a pwm on or off
 pwmOutToggle = function(chan, state)
 	-- get number of pwm outputs from c api
-    local numPWMs = getNumPWMOut()
+    local numPWMs = C_getNumPWMOut()
 
 	-- input sanitization
     if chan < 1 or chan > numPWMs then
@@ -141,7 +141,7 @@ pwmOutToggle = function(chan, state)
     end
 
 	-- bound c function from lua_bridge.cpp
-    setPwmOutState(chan, state)
+    C_setPwmOutState(chan, state)
 
     return nil, 0
 end

@@ -9,34 +9,36 @@
 #include "lua.h"
 
 #ifdef ARDUINO_NUCLEO_G474RE
-#define OUTPUT_PWMS 1 
+#define OUTPUT_PWMS 3
 #define INPUT_PWMS 4
 #endif
 
 enum LuaSignalType {
     UNSIGNED = 1,
-    SIGNED = 2, 
+    SIGNED = 2,
     FLOAT = 4,
 };
 
 void _log(String msg) {
     Serial.print("[");
-    Serial.print(millis()); 
-    Serial.print("] - "); 
+    Serial.print(millis());
+    Serial.print("] - ");
     Serial.println(msg);
 }
 
 OutputPWM * pwmOut[OUTPUT_PWMS] = {
-#ifdef ARDUINO_NUCLEO_G474RE 
+#ifdef ARDUINO_NUCLEO_G474RE
     new OutputPWM(PA0),
+    new OutputPWM(PA4),
+    new OutputPWM(PC8),
 #endif
 };
 
 InputPWM * pwmIn[INPUT_PWMS] = {
 #ifdef ARDUINO_NUCLEO_G474RE
-    new InputPWM(PC0, LOWFREQ), 
-    new InputPWM(PC1, LOWFREQ), 
-    new InputPWM(PC2, LOWFREQ), 
+    new InputPWM(PC0, LOWFREQ),
+    new InputPWM(PC1, LOWFREQ),
+    new InputPWM(PC2, LOWFREQ),
     new InputPWM(PC3, LOWFREQ),
 #endif // ARDUINO_NUCLEO_G474RE
 };
@@ -325,15 +327,15 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "adcReadDiff", lua_adcReadDiff);
     lua_register(L, "floatToString", lua_floatToString);
     lua_register(L, "getFileContents", lua_getFileContents);
-    lua_register(L, "getNumPWMOut", lua_getNumPWMOut);
-    lua_register(L, "setPwmOutFrequency", lua_setPwmOutFrequency);
-    lua_register(L, "setPwmOutDutyCycle", lua_setPwmOutDutyCycle);
-    lua_register(L, "setPwmOutState", lua_setPwmOutState);
-    lua_register(L, "getPwmOutList", lua_getPwmOutList);
-    lua_register(L, "getNumPWMIn", lua_getNumPWMIn); 
-    lua_register(L, "getPwmInFrequency", lua_getPwmInFrequency); 
-    lua_register(L, "getPwmInDutyCycle", lua_getPwmInDutyCycle);
-    lua_register(L, "getPwmInList", lua_getPwmInList);
+    lua_register(L, "C_getNumPWMOut", lua_getNumPWMOut);
+    lua_register(L, "C_getNumPWMIn", lua_getNumPWMIn); 
+    lua_register(L, "C_setPwmOutFrequency", lua_setPwmOutFrequency);
+    lua_register(L, "C_setPwmOutDutyCycle", lua_setPwmOutDutyCycle);
+    lua_register(L, "C_setPwmOutState", lua_setPwmOutState);
+    lua_register(L, "C_getPwmOutList", lua_getPwmOutList);
+    lua_register(L, "C_getPwmInFrequency", lua_getPwmInFrequency); 
+    lua_register(L, "C_getPwmInDutyCycle", lua_getPwmInDutyCycle);
+    lua_register(L, "C_getPwmInList", lua_getPwmInList);
     lua_register(L, "C_hrcReset", lua_hrcReset);
     lua_register(L, "C_hrcSetValue", lua_hrcSetValue); 
     lua_register(L, "C_hrcSend", lua_hrcSend);
