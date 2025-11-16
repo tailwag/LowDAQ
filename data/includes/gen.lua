@@ -32,6 +32,10 @@ testFloats = function()
     return nil, 0
 end
 
+free = function()
+    return tostring(collectgarbage("count")) .. "KB", 0
+end
+
 -------------------------------------------------------------------
 --- add all definied commands to the command parser in main.lua ---
 -------------------------------------------------------------------
@@ -45,3 +49,8 @@ commands.testFloats = {
     helpDescription = "print floating point number tests",
 }
 commands.testFloats.run    = testFloats
+
+commands.free = {
+    helpDescription = "check used memory in kb",
+}
+commands.free.run = free
