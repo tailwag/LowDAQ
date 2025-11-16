@@ -104,6 +104,10 @@ static const PinTimerMap timerPinChannels[] = {
     {PB7,  TIM4, 2}, // L21
     {PB8,  TIM4, 3}, // R03, D15
     {PB9,  TIM4, 4}, // R05, D14
+    {PC6,  TIM8, 1}, // R04
+    {PC7,  TIM8, 2}, // R19, D9 
+    {PC8,  TIM8, 3}, // R02
+    {PC9,  TIM8, 4}, // R01
   #endif
   #ifdef ARDUINO_NUCLEO_H753ZI
     {PE9,  TIM1, 1}, // LL15, D71
