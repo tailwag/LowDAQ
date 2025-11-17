@@ -18,20 +18,18 @@ end
 
 
 jobList = function()
-    local outputArray = {"#       Period    Description"}
+    print("#       Period    Description")
 
     for i, v in ipairs(jobs) do
-        local j_index  = padRight(tostring(i) .. ".", 5)
-        local j_period      = v.period and tostring(v.period) or ""
-        local j_description = v.description and tostring(v.description) or ""
+        printf(padRight(tostring(i) .. ".", 5))
+        printf(padLeft(v.period and tostring(v.period) or "", 9))
+        printf("    ")
+        printf(v.description and tostring(v.description) or "")
 
-        j_index       = padRight(j_index, 5)
-        j_period      = padLeft(j_period, 9)
-
-        table.insert(outputArray, "\n"..j_index..j_period.."    "..j_description)
+        print()
     end
 
-    return table.concat(outputArray), 0
+    return nil, 0
 end
 
 jobToggle = function(index, state)

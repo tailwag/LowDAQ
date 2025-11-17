@@ -1,3 +1,15 @@
+local RVC_hrcOutput = function(ecu, out, max, mode)
+    hrcReset(0x7EA, 7)
+    hrcSetValue(ecu,   0, 8, "unsigned") -- ECUreqDC  value, raw
+    hrcSetValue(ecu,   8, 8, "unsigned") -- ECUreqVlt value, scale = 0.05, offset = 11
+    hrcSetValue(out,  16, 8, "unsigned") -- RVCoutDC  value, raw
+    hrcSetValue(out,  24, 8, "unsigned") -- RVCoutVlt value, scale = 0.05, offset = 11
+    hrcSetValue(max,  32, 8, "unsigned") -- RVCmaxDC  value, raw
+    hrcSetValue(max,  40, 8, "unsigned") -- RVCmaxVlt value, scale = 0.05, offset = 11
+    hrcSetValue(mode, 48, 2, "unsigned") -- RVCmode   value, 1 = targetVolt, 2 = capVolt, 3 = targetSOC
+    hrcSend()
+end
+
 local updateRvcJob = function(job)
     local jobId
 
@@ -33,15 +45,7 @@ rvcTargetVolt = function(val)
             -- duty cycle output from the ECU 
             local ecuRequestDC = math.floor(pwmInGetDuty(1) + 0.5)
 
-            hrcReset(0x7EA, 7)
-            hrcSetValue(ecuRequestDC, 0, 8, "unsigned") -- ECUreqDC  value, raw
-            hrcSetValue(ecuRequestDC, 8, 8, "unsigned") -- ECUreqVlt value, scale = 0.05, offset = 11
-            hrcSetValue(dutyCycle,   16, 8, "unsigned") -- RVCoutDC  value, raw
-            hrcSetValue(dutyCycle,   24, 8, "unsigned") -- RVCoutVlt value, scale = 0.05, offset = 11
-            hrcSetValue(dutyCycle,   32, 8, "unsigned") -- RVCmaxDC  value, raw
-            hrcSetValue(dutyCycle,   40, 8, "unsigned") -- RVCmaxVlt value, scale = 0.05, offset = 11
-            hrcSetValue(1,           48, 2, "unsigned") -- RVCmode   value, 1 = targetVolt, 2 = capVolt, 3 = targetSOC
-            hrcSend()
+            RVC_hrcOutput(ecuRequestDC, dutyCycle, dutyCycle, 1)
         end
 
         pwmOutSet(1, 128, dutyCycle)
@@ -72,15 +76,7 @@ rvcCapVolt = function(val)
 
         -- human readable can module
         if ModuleIsLoaded("hrc") then
-            hrcReset(0x7EA, 7)
-            hrcSetValue(ecuRequestDC,  0, 8, "unsigned") -- ECUreqDC  value, raw
-            hrcSetValue(ecuRequestDC,  8, 8, "unsigned") -- ECUreqVlt value, scale = 0.05, offset = 11
-            hrcSetValue(dutyCycle,    16, 8, "unsigned") -- RVCoutDC  value, raw
-            hrcSetValue(dutyCycle,    24, 8, "unsigned") -- RVCoutVlt value, scale = 0.05, offset = 11
-            hrcSetValue(maxDutyCycle, 32, 8, "unsigned") -- RVCmaxDC  value, raw
-            hrcSetValue(maxDutyCycle, 40, 8, "unsigned") -- RVCmaxVlt value, scale = 0.05, offset = 11
-            hrcSetValue(2,            48, 2, "unsigned") -- RVCmode   value, 1 = targetVolt, 2 = capVolt, 3 = targetSOC
-            hrcSend()
+            RVC_hrcOutput(ecuRequestDC, dutyCycle, maxDutyCycle, 2)
         end
 
         pwmOutSet(1, 128, dutyCycle)

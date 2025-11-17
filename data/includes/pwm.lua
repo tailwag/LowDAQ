@@ -12,22 +12,14 @@ pwmInList = function()
         return "Error loading PWM list from C api.", 1
     end
 
-    local outputArray = {}
-
     for i, v in ipairs(pwmList) do
-        local pin  = i
-        local freq = v[1]
-        local duty = v[2]
-
-        local lineArr = {}
-        table.insert(lineArr, padRight(tostring(pin)..".", 5))
-        table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
-        table.insert(lineArr, padRight(tostring(duty).."%", 6))
-
-        table.insert(outputArray, table.concat(lineArr).."\n")
+        printf(padRight(tostring(i)..".", 5))
+        printf(padRight(tostring(v[1]).."Hz", 9))
+        printf(padRight(tostring(v[2]).."%", 6))
+        print()
     end
 
-    return table.concat(outputArray), 0
+    return nil, 0
 end
 
 pwmInGetFreq = function(chan)
@@ -79,24 +71,15 @@ pwmOutList = function()
         return "Error loading PWM list from C api.", 1
     end
 
-    local outputArray = {}
-
     for i, v in ipairs(pwmList) do
-        local pin  = i
-        local freq = v[1]
-        local duty = v[2]
-        local en   = v[3]
-
-        local lineArr = {}
-        table.insert(lineArr, padRight(tostring(pin)..".", 5))
-        table.insert(lineArr, padRight(tostring(freq).."Hz", 9))
-        table.insert(lineArr, padRight(tostring(duty).."%", 6))
-        table.insert(lineArr, padRight(tostring(en), 6))
-
-        table.insert(outputArray, table.concat(lineArr).."\n")
+        printf(padRight(tostring(i)..".", 5))
+        printf(padRight(tostring(v[1]).."Hz", 9))
+        printf(padRight(tostring(v[2]).."%", 6))
+        printf(padRight(tostring(v[3]), 6))
+        print()
     end
 
-    return table.concat(outputArray), 0
+    return nil, 0
 end
 
 

@@ -1,12 +1,16 @@
 #include "FDCANHAL.h"
 #include "stm32_def.h"
+#include "stm32g4xx_hal_def.h"
 #include "stm32g4xx_hal_flash.h"
 #include "stm32g4xx_hal_pwr_ex.h"
 #include "stm32g4xx_hal_rcc.h"
 
+
 void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+    HAL_StatusTypeDef s;
 
     // main internal regulator voltage
     HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST);

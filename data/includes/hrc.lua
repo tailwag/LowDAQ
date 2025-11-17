@@ -1,6 +1,17 @@
 HRCFrameLength = 0
 local dlcBytes = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}
 
+local typeMap = {
+    unsigned = 1,
+    signed = 2,
+    float = 4,
+}
+
+local orderMap = {
+    intel = 0,
+    motorola = 1,
+}
+
 -- human readable can library
 hrcReset = function(id, dlc)
     if not id or id < 0 or id > 0x7FF or id ~= math.floor(id) then
@@ -20,21 +31,19 @@ end
 
 hrcSetValue = function(value, startBit, length, type, order)
     if value and value == "help" then
-        local retVal = "hrcSetValue command:\n"
-        retVal = retVal .. "  startBit - the absolute bit position of the signal\n"
-        retVal = retVal .. "  length   - how many bits the signal spans\n"
-        retVal = retVal .. "  type     - unsigned, signed, or float\n"
-        retVal = retVal .. "  order    - (optional, defaults to intel) intel or motorola\n\n"
+        print("hrcSetValue command:")
+        print("  startBit - the absolute bit position of the signal")
+        print("  length   - how many bits the signal spans")
+        print("  type     - unsigned, signed, or float")
+        print("  order    - (optional, defaults to intel) intel or motorola\n")
 
-        return retVal, 0
+        return nil, 0
     end
 
     -- input verification for value 
-    value = value and tonumber(value) or nil
+    value = tonumber(value)
 
-    if not value then
-        return "must specify value to set", 1
-    end
+    if not value then return "must specify value to set", 1 end
 
     -- input verification for startBit
     startBit = startBit and tonumber(startBit) or nil
@@ -52,35 +61,28 @@ hrcSetValue = function(value, startBit, length, type, order)
     end
 
     -- type: 1 = unsigned, 2 = signed, 4 = float
-    type = type:gsub(" ", "")
-    if not type or (type and type ~= "unsigned" and type ~= "signed" and type ~= "float") then
-        return "type must be unsigned, signed, or float"
+    type = type:match("^%s*(.-)%s*$")
+    if not type then return "must specify type", 1 end
+
+    type = typeMap[type]
+    if not type then return "type must be unsigned, signed, or float", 1 end
+
+    -- avoid gsub if possible, while defaulting to intel
+    if order then
+        order = order:gmatch("^%s*(.-)%s*$")
+    else
+        order = "intel"
     end
 
-    type = type == "unsigned" and 1 or type
-    type = type == "signed"   and 2 or type
-    type = type == "float"    and 4 or type
-
-    -- order: 1 = intel, 2 = motorola
-    order = order and order or "intel"
-    order = order:gsub(" ", "")
-
-    if order ~= "intel" and order ~= "motorola" then
-        return "invalid argument, order must be intel or motorola", 1
-    end
-
-    order = order == "intel"    and 0 or order
-    order = order == "motorola" and 1 or order
+    order = orderMap[order]
 
     -- call C api
     C_hrcSetValue(value, startBit, length, type, order)
-
     return nil, 0
 end
 
 hrcSend = function()
     C_hrcSend()
-
     return nil, 0
 end
 

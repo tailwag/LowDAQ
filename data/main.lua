@@ -2,6 +2,8 @@
 ------- main.lua - all logic and baseline functions (non user called) ------
 -------            should reside here. user functions in func.lua     ------
 ----------------------------------------------------------------------------
+LastGC = millis()
+
 LoadedModules = {}
 ModuleIsLoaded = function(module)
     for _, v in ipairs(LoadedModules) do
@@ -35,28 +37,13 @@ inTable = function(t, v)
     return false
 end
 
--- return a string of n number of c characters
-repeatChar = function(c, n)
-    local chArray = {}
-
-    for _ = 1, n do
-        table.insert(chArray, c)
-    end
-
-    return table.concat(chArray)
-end
-
 -- pad a string with spaces
 padRight = function(strIn, width)
-    local spcLen = width - #strIn
-
-    return strIn .. repeatChar(" ", spcLen)
+    return strIn .. string.rep(" ", width - #strIn)
 end
 
 padLeft = function(strIn, width)
-    local spcLen = width - #strIn
-
-    return repeatChar(" ", spcLen) .. strIn
+    return string.rep(" ", width - #strIn) .. strIn
 end
 
 -- user facing commands 
@@ -129,8 +116,8 @@ commands = {
                 for _, v in ipairs(helpTable) do
                     if v[1] == tabCat then
                         table.insert(v[2], {column1, column2})
+                        break
                     end
-                    --TODO: break?
                 end
             end
 
@@ -155,7 +142,7 @@ commands = {
 
             -- figure out how many = we need on either side of the title
             local titlePad = math.floor((maxWidth - #menuTitle) / 2) + 2
-            local borderBar = repeatChar("=", titlePad)
+            local borderBar = string.rep("=", titlePad)
 
             local titleLine = borderBar .. menuTitle .. borderBar
 
@@ -168,32 +155,26 @@ commands = {
 
                 -- command category
                 printf("==")
-                printf(repeatChar(" ", categoryMargin))
+                printf(string.rep(" ", categoryMargin))
                 printf(padRight(l_category, maxWidth - categoryMargin))
                 print ("==")
-                collectgarbage()
 
-                for _, cmdArr in ipairs(l_commands) do 
+                for _, cmdArr in ipairs(l_commands) do
                     -- command with args and description
                     printf("==")
-                    printf(repeatChar(" ", helpMargin))
+                    printf(string.rep(" ", helpMargin))
                     printf(padRight(cmdArr[1], col1max))
                     printf(padRight(cmdArr[2], col2max))
-                    printf(repeatChar(" ", helpMargin))
+                    printf(string.rep(" ", helpMargin))
                     print ("==")
-                    collectgarbage()
                 end
 
                 -- blank line in between categories
-                print("==" .. repeatChar(" ", maxWidth) .. "==")
-                collectgarbage()
+                print("==" .. string.rep(" ", maxWidth) .. "==")
             end
 
             -- bottom border
-            print(repeatChar("=", maxWidth + 4))
-
-            -- avoid memory fragmentation
-            collectgarbage()
+            print(string.rep("=", maxWidth + 4))
         end
     },
     --------------------------------------------------------------
@@ -322,10 +303,14 @@ function parseCommand(str)
 
     invalidCommand()
     printPrompt()
-    collectgarbage()
 end
 
 function loop()
+    if millis() - LastGC >= 1000 then 
+        collectgarbage()
+        LastGC = millis()
+    end
+
     sendPeriodicFrames()
     runPeriodicJobs()
 end

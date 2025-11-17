@@ -28,25 +28,19 @@ end
 
 -- list configuration of current ADC channels
 adcList = function()
-	-- define output array
-    local outputArray = {}
-
-	-- insert title line
-    table.insert(outputArray, "#      Scale    Offset     Unit\n")
+    print("#      Scale    Offset     Unit\n")
 
     for i, v in ipairs(adcChannels) do
 		-- get and format each value
-        col1 = padRight(tostring(i)..".", 3)
-        col2 = padLeft(tostring(v[1]), 9)
-        col3 = padLeft(tostring(v[2]), 9)
-        col4 = padLeft(tostring(v[3]), 9)
-
-		-- add line to table
-        table.insert(outputArray, col1..col2..col3..col4.."\n")
+        printf(padRight(tostring(i)..".", 3))
+        printf(padLeft(tostring(v[1]), 9))
+        printf(padLeft(tostring(v[2]), 9))
+        printf(padLeft(tostring(v[3]), 9))
+        print()
     end
 
 	-- collapse table into string and return no error
-    return table.concat(outputArray), 0
+    return nil, 0
 end
 
 
@@ -90,7 +84,7 @@ commands.adcRead.run       = adcRead
 
 commands.adcList = {
     helpCategory    = "ADC Commands",
-    helpDescription = "list the configuration of the available adc channels",
+    helpDescription = "list the config of the available adc channels",
 }
 commands.adcList.run       = adcList
 
