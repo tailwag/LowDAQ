@@ -1,5 +1,10 @@
+/*  ---------------------------------------------  *
+ *  --  STM32DuinoCANFD 0.1.0 -- 2025-11-19    --  *
+ *  --  Devin Shoemaker - devin@shoemaker.info --  *
+ *  --  github.com/tailwag/STM32DuinoCANFD     --  *
+ *  ---------------------------------------------  */
+
 #include "STM32DuinoCANFD.hpp"
-#include <cstdint>
 
 // global channel definition
 FDCAN_GlobalTypeDef * AvailableChannels[3] = { FDCAN1, FDCAN2, FDCAN3 };

@@ -1,3 +1,12 @@
+/*  ----------------------------------------------  *
+ *  --  LowDAQ Release 0.1.0 - 2025-11-19       --  *
+ *  --  Devin Shoemaker - devin@shoemaker.info  --  *
+ *  --  github.com/tailwag/LowDAQ               --  *
+ *  --  Lua Version 5.4.8                       --  *
+ *  --  STM32DuinoCANFD version 0.1.0           --  *
+ *  --  STM32DuinoPWM   version 0.1.0           --  *
+ *  ----------------------------------------------  */
+
 #include <Arduino.h>
 #include <lua_bridge.h>
 
