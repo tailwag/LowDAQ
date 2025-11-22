@@ -1,12 +1,16 @@
-#ifdef G474RE
+#ifdef ARDUINO_NUCLEO_H753ZI
+#include "stm32h7xx_hal.h"
+#endif
+
+#ifdef ARDUINO_NUCLEO_G474RE
 #include "stm32g4xx_hal.h"
 #endif
 
-#ifdef F401RE
+#ifdef ARDUINO_NUCLEO_F401RE
 #include "stm32f4xx_hal.h"
 #endif
 
-#ifdef G0B1RE
+#ifdef ARDUINO_NUCLEO_G0B1RE
 #include "stm32g0xx_hal.h"
 #endif 
 

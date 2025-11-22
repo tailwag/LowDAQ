@@ -5,13 +5,19 @@
 #include <c_functions.h>
 #include "lua.hpp"
 
-#ifdef F401RE
+#ifdef ARDUINO_NUCLEO_F401RE
   #define CAN0_CS 10 
   #define SD_CS 9
   #define ADS1_ID 0x48
 #endif
 
-#ifdef G474RE
+#ifdef ARDUINO_NUCLEO_G474RE
+  #define CAN0_CS 10 
+  #define SD_CS 9
+  #define ADS1_ID 0x48
+#endif
+
+#ifdef ARDUINO_NUCLEO_H753ZI
   #define CAN0_CS 10 
   #define SD_CS 9
   #define ADS1_ID 0x48

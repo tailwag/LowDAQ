@@ -1,12 +1,7 @@
-/*  ----------------------------------------------  *
- *  --  STM32DuinoPWM 0.1.0 - 2025-11-19        --  *
- *  --  Devin Shoemaker - devin@shoemaker.info  --  *
- *  --  github.com/tailwag/STM32DuinoPWM        --  *
- *  ----------------------------------------------  */
-
 #include "STM32DuinoPWM.hpp"
 #include "HardwareTimer.h"
-#include "stm32g474xx.h"
+#include "wiring_time.h"
+#include <cstdint>
 
 static InputPWM *inputInstances[32] = {nullptr};
 

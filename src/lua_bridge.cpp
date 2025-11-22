@@ -13,6 +13,11 @@
 #define INPUT_PWMS 4
 #endif
 
+#ifdef ARDUINO_NUCLEO_H753ZI
+#define OUTPUT_PWMS 4
+#define INPUT_PWMS 4
+#endif
+
 enum LuaSignalType {
     UNSIGNED = 1,
     SIGNED = 2,
@@ -27,19 +32,29 @@ void _log(String msg) {
 }
 
 OutputPWM * pwmOut[OUTPUT_PWMS] = {
-#ifdef ARDUINO_NUCLEO_G474RE
+#if defined (ARDUINO_NUCLEO_G474RE)
     new OutputPWM(PA0),
     new OutputPWM(PA4),
     new OutputPWM(PC8),
+#elif defined (ARDUINO_NUCLEO_H753ZI)
+    new OutputPWM(PE9),
+    new OutputPWM(PB10),
+    new OutputPWM(PC8),
+    new OutputPWM(PD12)
 #endif
 };
 
 InputPWM * pwmIn[INPUT_PWMS] = {
-#ifdef ARDUINO_NUCLEO_G474RE
+#if defined (ARDUINO_NUCLEO_G474RE)
     new InputPWM(PC0, LOWFREQ),
     new InputPWM(PC1, LOWFREQ),
     new InputPWM(PC2, LOWFREQ),
     new InputPWM(PC3, LOWFREQ),
+#elif defined (ARDUINO_NUCLEO_H753ZI)
+    new InputPWM(PA0, LOWFREQ),
+    new InputPWM(PA1, LOWFREQ),
+    new InputPWM(PA2, LOWFREQ),
+    new InputPWM(PA3, LOWFREQ),
 #endif // ARDUINO_NUCLEO_G474RE
 };
 
@@ -381,13 +396,13 @@ bool initLua(const char* scriptPath) {
     _log("Start PWM Output(s):");
     for (uint8_t i = 0; i < OUTPUT_PWMS; i++) {
       pwmOut[i]->begin();
-      _log("  CH" + String(i) + ": ✓");
+      _log("  CH" + String(i+1) + ": ✓");
     }
 
     _log("Start PWM Input(s):");
     for (uint8_t i = 0; i < INPUT_PWMS; i++) {
       pwmIn[i]->begin(); 
-      _log("  CH" + String(i) + ": ✓");
+      _log("  CH" + String(i+1) + ": ✓");
     }
 
     _log("Start ADS Peripheral:");
