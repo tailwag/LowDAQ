@@ -58,9 +58,9 @@ InputPWM * pwmIn[INPUT_PWMS] = {
 #endif // ARDUINO_NUCLEO_G474RE
 };
 
-CanFrame* LuaSendFrame = new CanFrame();
+FDCAN_Frame* LuaSendFrame = new FDCAN_Frame();
 
-FDCanChannel can0(CH1, b500000, b2000000);
+FDCAN_Instance can0(FDCAN_Channel::CH1);
 Adafruit_ADS1115 adc0;
 
 lua_State* L;
@@ -212,7 +212,7 @@ int lua_millis(lua_State* L) {
 
 // Expose CAN frame send to LUA
 int lua_sendCanFrame(lua_State* L) {
-    CanFrame SendFrame;
+    FDCAN_Frame SendFrame;
 
     SendFrame.canId  = luaL_checkinteger(L, 1);
     SendFrame.canDlc = luaL_checkinteger(L, 2);
@@ -315,7 +315,7 @@ int lua_hrcSetValue(lua_State* L) {
     uint16_t startBit = luaL_checkinteger(L, 2);
     uint8_t    length = luaL_checkinteger(L, 3);
     uint8_t      type = luaL_checkinteger(L, 4);
-    Endian order = (Endian)luaL_checkinteger(L, 5);
+    FDCAN_ByteOrder order = (FDCAN_ByteOrder)luaL_checkinteger(L, 5);
 
     switch (type) {
         case UNSIGNED: LuaSendFrame->SetUnsigned(value, startBit, length, order); break; 
@@ -391,7 +391,13 @@ bool initLua(const char* scriptPath) {
     }
 
     _log("Start CAN-FD");
-    can0.begin();
+    FDCAN_Settings Settings;
+    Settings.NominalBitrate = FDCAN_Bitrate::b500000;
+    Settings.DataBitrate    = FDCAN_Bitrate::b2000000;
+    if (can0.begin(&Settings) != FDCAN_Status::OK) {
+        _log("Kernel: unable to start CAN-FD interface");
+        while (true) { }
+    }
  
     _log("Start PWM Output(s):");
     for (uint8_t i = 0; i < OUTPUT_PWMS; i++) {
