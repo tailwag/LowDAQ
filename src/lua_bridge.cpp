@@ -65,8 +65,124 @@ Adafruit_ADS1115 adc0;
 
 lua_State* L;
 
-int lua_getSystemTime(lua_State* L) {
+/*  --------------------------------------------------------------------------------  *
+ *  ----    Registered Lua functions                                            ----  *
+ *  --------------------------------------------------------------------------------  */
+// Expose millis() to lua
+int lua_millis(lua_State* L) {
     lua_pushinteger(L, millis());
+
+    return 1;
+}
+
+// Expose CAN frame send to LUA
+int lua_sendCanFrame(lua_State* L) {
+    FDCAN_Frame SendFrame;
+
+    SendFrame.canId  = luaL_checkinteger(L, 1);
+    SendFrame.canDlc = luaL_checkinteger(L, 2);
+
+    uint8_t dataLength = lua_gettop(L) - 2;
+    uint8_t byteLength = DlcToLen(SendFrame.canDlc);
+
+    dataLength = (byteLength < dataLength) ? byteLength : dataLength;
+
+    for (int i = 0; i < dataLength; i++) {
+        SendFrame.data[i] = luaL_checkinteger(L, 3 + i); 
+    }
+    can0.sendFrame(&SendFrame);
+    return 0;
+}
+
+// Expose Serial print to Lua
+int luaPrintHandler(lua_State* L) {
+    int n = lua_gettop(L);
+    for (int i = 1; i <= n; i++) {
+        if (lua_isinteger(L, i)) {
+            Serial.print("int");
+            Serial.print(lua_tointeger(L, i));
+        }
+        //else if (lua_isnumber(L, i)) {
+        //    Serial.print((float)lua_tonumber(L, i), 2); // force single-precision, 2 decimal places
+        //} 
+        else {
+            Serial.print(lua_tostring(L, i));
+        }
+        if (i < n) Serial.print("\t");
+    }
+    return 0;
+}
+
+int lua_print(lua_State* L) {
+    int ret = luaPrintHandler(L); 
+
+    Serial.println();
+
+    return ret;
+}
+
+int lua_printf(lua_State* L) {
+    int ret = luaPrintHandler(L); 
+
+    return ret;
+}
+
+// Expose Serial reading to lua
+int lua_serialRead(lua_State* L) {
+    if (Serial.available() > 0)
+        lua_pushinteger(L, Serial.read());
+    else
+        lua_pushinteger(L, -1);
+
+    return 1;
+}
+
+// expose ADC read to LUA
+int lua_adcReadDiff(lua_State* L) {
+    int channel = luaL_checkinteger(L, 1);
+
+    float multiplier = 0.1875F;
+    int16_t result   = 0;
+
+    if (channel == 1)
+        result = adc0.readADC_Differential_0_1();
+    else if (channel == 2)
+        result = adc0.readADC_Differential_2_3();
+
+    lua_pushnumber(L, (float)result * multiplier);
+
+    return 1;
+}
+
+int lua_floatToString(lua_State* L) {
+    float floatIn = luaL_checknumber(L, 1); 
+    char buf[16]; 
+
+    snprintf(buf, sizeof(buf), "%.3f", floatIn);
+    lua_pushstring(L, buf);
+
+    return 1;
+}
+
+// load a lua module file and return it as a string
+int lua_getFileContents(lua_State* L) {
+    const char* filename = luaL_checkstring(L, 1);
+
+    File dataFile = SD.open(filename, FILE_READ);
+    String fileText = "";
+
+    if (dataFile) {
+        while(dataFile.available()) {
+            fileText += (char)dataFile.read();
+        }
+        dataFile.close();
+    }
+
+    int strArrLength = fileText.length() + 1;
+    char retStr[strArrLength];
+    fileText.toCharArray(retStr, strArrLength);
+
+    lua_pushstring(L, retStr);
 
     return 1;
 }
@@ -77,6 +193,11 @@ int lua_getNumPWMOut(lua_State* L) {
     return 1;
 }
 
+int lua_getNumPWMIn(lua_State* L) {
+    lua_pushinteger(L, INPUT_PWMS);
+
+    return 1;
+}
 
 int lua_setPwmOutFrequency(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
@@ -133,11 +254,6 @@ int lua_getPwmOutList(lua_State* L) {
     return 1;
 }
 
-int lua_getNumPWMIn(lua_State* L) {
-    lua_pushinteger(L, INPUT_PWMS);
-
-    return 1;
-}
 
 int lua_getPwmInFrequency(lua_State* L) {
     int chan = luaL_checkinteger(L, 1);
@@ -178,124 +294,6 @@ int lua_getPwmInList(lua_State* L) {
  
     lua_pushstring(L, pushArr); 
  
-    return 1;
-}
-
-// load a lua module file and return it as a string
-int lua_getFileContents(lua_State* L) {
-    const char* filename = luaL_checkstring(L, 1);
-
-    File dataFile = SD.open(filename, FILE_READ);
-    String fileText = "";
-
-    if (dataFile) {
-        while(dataFile.available()) {
-            fileText += (char)dataFile.read();
-        }
-        dataFile.close();
-    }
-
-    int strArrLength = fileText.length() + 1;
-    char retStr[strArrLength];
-    fileText.toCharArray(retStr, strArrLength);
-
-    lua_pushstring(L, retStr);
-
-    return 1;
-}
-
-// Expose millis() to lua
-int lua_millis(lua_State* L) {
-    lua_pushinteger(L, millis());
-    return 1;
-}
-
-// Expose CAN frame send to LUA
-int lua_sendCanFrame(lua_State* L) {
-    FDCAN_Frame SendFrame;
-
-    SendFrame.canId  = luaL_checkinteger(L, 1);
-    SendFrame.canDlc = luaL_checkinteger(L, 2);
-
-    uint8_t dataLength = lua_gettop(L) - 2;
-    uint8_t byteLength = DlcToLen(SendFrame.canDlc);
-
-    dataLength = (byteLength < dataLength) ? byteLength : dataLength;
-
-    for (int i = 0; i < dataLength; i++) {
-        SendFrame.data[i] = luaL_checkinteger(L, 3 + i); 
-    }
-    can0.sendFrame(&SendFrame);
-    return 0;
-}
-
-// expose ADC read to LUA
-int lua_adcReadDiff(lua_State* L) {
-    int channel = luaL_checkinteger(L, 1);
-
-    float multiplier = 0.1875F;
-    int16_t result   = 0;
-
-    if (channel == 1)
-        result = adc0.readADC_Differential_0_1();
-    else if (channel == 2)
-        result = adc0.readADC_Differential_2_3();
-
-    lua_pushnumber(L, (float)result * multiplier);
-
-    return 1;
-}
-
-int lua_floatToString(lua_State* L) {
-    float floatIn = luaL_checknumber(L, 1); 
-    char buf[16]; 
-
-    snprintf(buf, sizeof(buf), "%.3f", floatIn);
-    lua_pushstring(L, buf);
-
-    return 1;
-}
-
-// Expose Serial print to Lua
-int luaPrintHandler(lua_State* L) {
-    int n = lua_gettop(L);
-    for (int i = 1; i <= n; i++) {
-        if (lua_isinteger(L, i)) {
-            Serial.print("int");
-            Serial.print(lua_tointeger(L, i));
-        }
-        //else if (lua_isnumber(L, i)) {
-        //    Serial.print((float)lua_tonumber(L, i), 2); // force single-precision, 2 decimal places
-        //} 
-        else {
-            Serial.print(lua_tostring(L, i));
-        }
-        if (i < n) Serial.print("\t");
-    }
-    return 0;
-}
-int lua_print(lua_State* L) {
-    int ret = luaPrintHandler(L); 
-
-    Serial.println();
-
-    return ret;
-}
-
-int lua_printf(lua_State* L) {
-    int ret = luaPrintHandler(L); 
-
-    return ret;
-}
-
-
-// Expose Serial reading to lua
-int lua_serialRead(lua_State* L) {
-    if (Serial.available() > 0)
-        lua_pushinteger(L, Serial.read());
-    else
-        lua_pushinteger(L, -1);
-
     return 1;
 }
 
@@ -355,7 +353,11 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "C_hrcSetValue", lua_hrcSetValue); 
     lua_register(L, "C_hrcSend", lua_hrcSend);
 }
+/*  --------------------------------------------------------------------------------  *
+ *  ----   END Registered Lua functions                                         ----  *
+ *  --------------------------------------------------------------------------------  */
 
+// function to load programs off SD card
 bool loadLuaScript(const char* path) {
     File file = SD.open(path);
     if (!file) {
@@ -390,10 +392,11 @@ bool initLua(const char* scriptPath) {
         return false;
     }
 
-    _log("Start CAN-FD");
     FDCAN_Settings Settings;
     Settings.NominalBitrate = FDCAN_Bitrate::b500000;
     Settings.DataBitrate    = FDCAN_Bitrate::b2000000;
+
+    _log("Start CAN-FD");
     if (can0.begin(&Settings) != FDCAN_Status::OK) {
         _log("Kernel: unable to start CAN-FD interface");
         while (true) { }
