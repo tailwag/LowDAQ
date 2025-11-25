@@ -7,11 +7,35 @@
  *  --  STM32DuinoPWM   version 0.1.0           --  *
  *  ----------------------------------------------  */
 
+#include "lua.h"
 #include <Arduino.h>
+#include <cstdint>
 #include <lua_bridge.h>
 
 
-const char includeDir[] = "/includes/";
+const char * includeDir = "/includes/";
+const char *  configDir = "/config/";
+
+void loadFiles(const char * dir) {
+    FileList * dirFiles = ls(dir);
+
+    if (dirFiles == nullptr) {
+        _log("    [HALT] ERROR: Unable to access " + String(dir));
+        while (true) { }
+    }
+
+    for (uint16_t i = 0; i < dirFiles->count; i++) {
+        String filePath = String(dir) + String(dirFiles->names[i]);
+
+        if (!loadLuaScript(filePath.c_str())) {
+            _log("    [HALT] ERROR: Unable to load file: " + String(dir) + String(filePath));
+            while(true) { }
+        }
+        else {
+            _log("    " + filePath + ": ✓");
+        }
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -29,19 +53,18 @@ void setup() {
         while(true);
     }
 
-    _log("Loading include files: ");
-
     // load include files
-    FileList * includeFiles = ls(includeDir);
+    _log("Loading include files: ");
+    loadFiles(includeDir);
 
-    for (uint16_t i = 0; i < includeFiles->count; i++) {
-        String filePath = String(includeDir) + String(includeFiles->names[i]);
+    // load config files
+    _log("Loading config files: ");
+    loadFiles(configDir);
 
-        if (!loadLuaScript(filePath.c_str())) 
-            _log("Error loading include file: " + String(filePath));
-        else
-            _log("    " + filePath + ": ✓");
-    }
+
+    // run lua setup function
+    luaStartup();
+    
 
     Serial.println();
     Serial.println("***********************************************************");

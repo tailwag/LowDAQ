@@ -2,6 +2,14 @@
 ------- main.lua - all logic and baseline functions (non user called) ------
 -------            should reside here. user functions in func.lua     ------
 ----------------------------------------------------------------------------
+G_startup = { }
+
+function startup()
+    for _, v in ipairs(G_startup) do
+        v()
+    end
+end
+
 LastGC = millis()
 
 LoadedModules = {}

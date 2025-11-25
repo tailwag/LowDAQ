@@ -8,22 +8,6 @@
 #include "lauxlib.h"
 #include "lua.h"
 
-#ifdef ARDUINO_NUCLEO_G474RE
-#define OUTPUT_PWMS 3
-#define INPUT_PWMS 4
-#endif
-
-#ifdef ARDUINO_NUCLEO_H753ZI
-#define OUTPUT_PWMS 4
-#define INPUT_PWMS 4
-#endif
-
-enum LuaSignalType {
-    UNSIGNED = 1,
-    SIGNED = 2,
-    FLOAT = 4,
-};
-
 void _log(String msg) {
     Serial.print("[");
     Serial.print(millis());
@@ -312,6 +296,8 @@ int lua_hrcSetValue(lua_State* L) {
     float       value =  luaL_checknumber(L, 1);
     uint16_t startBit = luaL_checkinteger(L, 2);
     uint8_t    length = luaL_checkinteger(L, 3);
+
+    // TODO: add input sanitization
     uint8_t      type = luaL_checkinteger(L, 4);
     FDCAN_ByteOrder order = (FDCAN_ByteOrder)luaL_checkinteger(L, 5);
 
@@ -330,6 +316,46 @@ int lua_hrcSend(lua_State* L) {
     return 1;
 }
 
+int lua_startCanPeripheral(lua_State* L) {
+    uint8_t nBitrateEnumVal = luaL_checkinteger(L, 1);
+    uint8_t dBitrateEnumVal = luaL_checkinteger(L, 2);
+    uint8_t chanModeEnumVal = luaL_checkinteger(L, 3);
+    uint8_t frmFormtEnumVal = luaL_checkinteger(L, 4);
+
+    if (nBitrateEnumVal > NUM_BITRATE || nBitrateEnumVal < 0) {
+        _log("[HALT] ERROR: Nominal bitrate out of range. Check CAN config file!");
+        while (true) { }
+    }
+
+    if (dBitrateEnumVal > NUM_BITRATE || dBitrateEnumVal < 0) {
+        _log("[HALT] ERROR: Data bitrate out of range. Check CAN config file!");
+        while (true) { }
+    }
+
+    if (chanModeEnumVal > NUM_MODE || chanModeEnumVal < 0) {
+        _log("[HALT] ERROR: Peripheral mode value out of range. Check CAN config file!");
+        while (true) { }
+    }
+
+    if (frmFormtEnumVal > NUM_FRAMEFORMAT || frmFormtEnumVal < 0) {
+        _log("[HALT] ERROR: Frame format value out of range. Check CAN config file!");
+        while (true) { }
+    }
+
+    FDCAN_Settings Settings;
+    Settings.NominalBitrate = (FDCAN_Bitrate) nBitrateEnumVal;
+    Settings.DataBitrate    = (FDCAN_Bitrate) dBitrateEnumVal;
+    Settings.Mode           = (FDCAN_Mode) chanModeEnumVal;
+    Settings.FrameFormat    = (FDCAN_FrameFormat) frmFormtEnumVal;
+
+    _log("    Start CAN-FD Peripheral");
+    if (can0.begin(&Settings) != FDCAN_Status::OK) {
+        _log("[HALT] ERROR: Unable to initialize CAN-FD peripheral!");
+        while (true) { }
+    }
+
+    return 1;
+}
 // Register functions
 void registerLuaFunctions(lua_State* L) {
     lua_register(L, "millis", lua_millis);
@@ -352,6 +378,7 @@ void registerLuaFunctions(lua_State* L) {
     lua_register(L, "C_hrcReset", lua_hrcReset);
     lua_register(L, "C_hrcSetValue", lua_hrcSetValue); 
     lua_register(L, "C_hrcSend", lua_hrcSend);
+    lua_register(L, "C_startCanPeripheral", lua_startCanPeripheral);
 }
 /*  --------------------------------------------------------------------------------  *
  *  ----   END Registered Lua functions                                         ----  *
@@ -387,21 +414,12 @@ bool loadLuaScript(const char* path) {
 
 // ---- Public API ----
 bool initLua(const char* scriptPath) {
+    _log("Initialize SD Card:");
     if (!SD.begin(SD_CS)) {
         _log("Kernel: could not initialize SD card");
         return false;
     }
 
-    FDCAN_Settings Settings;
-    Settings.NominalBitrate = FDCAN_Bitrate::b500000;
-    Settings.DataBitrate    = FDCAN_Bitrate::b2000000;
-
-    _log("Start CAN-FD");
-    if (can0.begin(&Settings) != FDCAN_Status::OK) {
-        _log("Kernel: unable to start CAN-FD interface");
-        while (true) { }
-    }
- 
     _log("Start PWM Output(s):");
     for (uint8_t i = 0; i < OUTPUT_PWMS; i++) {
       pwmOut[i]->begin();
@@ -424,6 +442,14 @@ bool initLua(const char* scriptPath) {
     registerLuaFunctions(L);
 
     return loadLuaScript(scriptPath);
+}
+
+void luaStartup(void) {
+    // call startup function in main.lua
+    // this is used to initialize peripherals that load conf values from a lua file
+    _log("Running Lua startup function:");
+    lua_getglobal(L, "startup");
+    lua_pcall(L, 0, 0, 0);
 }
 
 void luaLoop() {
