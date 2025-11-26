@@ -203,7 +203,7 @@ end
 function runPeriodicJobs()
     local t = millis()
     for _, j in ipairs(jobs) do
-        if j.enabled and t >= j.lastSent + j.period then
+        if j.enabled and j.enabled == true and t >= j.lastSent + j.period then
             j.run()
             j.lastSent = t
         end

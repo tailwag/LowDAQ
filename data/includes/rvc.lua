@@ -82,7 +82,7 @@ rvcCapVolt = function(val)
         pwmOutSet(1, 128, dutyCycle)
     end
 
-    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=1, lastSent=0, rvcMode="capVolt", rvcSP=maxDutyCycle}
+    local job = {run=rvcFunc, period=100, description="auto added by rvc", enabled=true, lastSent=0, rvcMode="capVolt", rvcSP=maxDutyCycle}
 
     return updateRvcJob(job)
 end

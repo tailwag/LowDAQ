@@ -32,6 +32,7 @@ end
 hrcSetValue = function(value, startBit, length, type, order)
     if value and value == "help" then
         print("hrcSetValue command:")
+        print("  value    - the value you'd like to set")
         print("  startBit - the absolute bit position of the signal")
         print("  length   - how many bits the signal spans")
         print("  type     - unsigned, signed, or float")
@@ -95,7 +96,7 @@ commands.hrcReset.run = hrcReset
 
 commands.hrcSetValue = {
     helpCategory    = "Human Readable CAN Commands",
-    helpArguments   = {"startBit", "length", "type", "order"},
+    helpArguments   = {"value", "startBit", "length", "type", "order"},
     helpDescription = "set a value, run hrcSetValue(help) for more info",
 }
 commands.hrcSetValue.run = hrcSetValue
