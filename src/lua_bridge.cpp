@@ -311,7 +311,7 @@ int lua_hrcSetValue(lua_State* L) {
     FDCAN_ByteOrder order = (FDCAN_ByteOrder)luaL_checkinteger(L, 5);
 
     switch (type) {
-        case UNSIGNED: LuaSendFrame->SetUnsigned(value, startBit, length, order); break; 
+        case UNSIGNED: LuaSendFrame->SetUnsigned(value, startBit, length, order); break;
         case SIGNED  : LuaSendFrame->SetSigned  (value, startBit, length, order); break;
         case FLOAT   : LuaSendFrame->SetFloat   (value, startBit, length, order); break;
     };
