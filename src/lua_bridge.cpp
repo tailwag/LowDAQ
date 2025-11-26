@@ -1,18 +1,27 @@
 #include <Arduino.h>
-#include <SPI.h>
-#include <cstdint>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
 #include "STM32DuinoPWM.hpp"
-#include "STM32DuinoCANFD.hpp"
-#include "lauxlib.h"
-#include "lua.h"
+#include "STM32DuinoCANFD.h"
+
+// enum max values. enums in FDCAN_Defines.h
+#define NUM_MODE 5
+#define NUM_FRAMEFORMAT 3
 
 void _log(String msg) {
     Serial.print("[");
     Serial.print(millis());
     Serial.print("] - ");
     Serial.println(msg);
+}
+
+int lua_log(lua_State* L) {
+    String msg = luaL_checkstring(L, 1);
+    Serial.print("[");
+    Serial.print(millis());
+    Serial.print("] - ");
+    Serial.println(msg);
+    return 1;
 }
 
 OutputPWM * pwmOut[OUTPUT_PWMS] = {
@@ -317,38 +326,53 @@ int lua_hrcSend(lua_State* L) {
 }
 
 int lua_startCanPeripheral(lua_State* L) {
-    uint8_t nBitrateEnumVal = luaL_checkinteger(L, 1);
-    uint8_t dBitrateEnumVal = luaL_checkinteger(L, 2);
-    uint8_t chanModeEnumVal = luaL_checkinteger(L, 3);
-    uint8_t frmFormtEnumVal = luaL_checkinteger(L, 4);
+    uint32_t nBitrate = luaL_checkinteger(L, 1);
+    uint32_t dBitrate = luaL_checkinteger(L, 2);
+    uint8_t  nSample  = luaL_checkinteger(L, 3);
+    uint8_t  dSample  = luaL_checkinteger(L, 4);
+    uint8_t chanModeEnumVal = luaL_checkinteger(L, 5);
+    uint8_t frmFormtEnumVal = luaL_checkinteger(L, 6);
 
-    if (nBitrateEnumVal > NUM_BITRATE || nBitrateEnumVal < 0) {
-        _log("[HALT] ERROR: Nominal bitrate out of range. Check CAN config file!");
-        while (true) { }
-    }
-
-    if (dBitrateEnumVal > NUM_BITRATE || dBitrateEnumVal < 0) {
-        _log("[HALT] ERROR: Data bitrate out of range. Check CAN config file!");
-        while (true) { }
-    }
-
-    if (chanModeEnumVal > NUM_MODE || chanModeEnumVal < 0) {
+    if (chanModeEnumVal >= NUM_MODE || chanModeEnumVal < 0) {
         _log("[HALT] ERROR: Peripheral mode value out of range. Check CAN config file!");
         while (true) { }
     }
 
-    if (frmFormtEnumVal > NUM_FRAMEFORMAT || frmFormtEnumVal < 0) {
+    if (frmFormtEnumVal >= NUM_FRAMEFORMAT || frmFormtEnumVal < 0) {
         _log("[HALT] ERROR: Frame format value out of range. Check CAN config file!");
         while (true) { }
     }
 
-    FDCAN_Settings Settings;
-    Settings.NominalBitrate = (FDCAN_Bitrate) nBitrateEnumVal;
-    Settings.DataBitrate    = (FDCAN_Bitrate) dBitrateEnumVal;
+    String modeStr[5] = {
+        "Normal",
+        "Restricted",
+        "Monitor Only",
+        "Internal Loopback",
+        "External Loopback"
+    };
+
+    String frameStr[3] = {
+        "CAN 2.0B",
+        "CAN FD, Non BRS",
+        "CAN-FD BRS"
+    };
+
+    FDCAN_Settings Settings(nBitrate, dBitrate, nSample, dSample);
     Settings.Mode           = (FDCAN_Mode) chanModeEnumVal;
     Settings.FrameFormat    = (FDCAN_FrameFormat) frmFormtEnumVal;
 
-    _log("    Start CAN-FD Peripheral");
+    _log("    == Start CAN-FD Peripheral ==");
+    _log("    Requested Mode  : " + modeStr[(int)chanModeEnumVal]);
+    _log("    Frame Format    : " + frameStr[(int)frmFormtEnumVal]);
+    _log("    Req. Arb. Speed : " + String(nBitrate));
+    _log("    Real Arb. Speed : " + String(Settings.GetNominalBitrate()));
+    _log("    Req. Arb. SP    : " + String((float)nSample) + "%");
+    _log("    Real Arb. SP    : " + String(Settings.GetNominalSamplePoint()) + "%");
+    _log("    Req. Data Speed : " + String(dBitrate));
+    _log("    Real Data Speed : " + String(Settings.GetDataBitrate()));
+    _log("    Req. Data SP    : " + String((float)dSample) + "%");
+    _log("    Real Data SP    : " + String(Settings.GetDataSamplePoint()) + "%");
+
     if (can0.begin(&Settings) != FDCAN_Status::OK) {
         _log("[HALT] ERROR: Unable to initialize CAN-FD peripheral!");
         while (true) { }
@@ -358,26 +382,27 @@ int lua_startCanPeripheral(lua_State* L) {
 }
 // Register functions
 void registerLuaFunctions(lua_State* L) {
-    lua_register(L, "millis", lua_millis);
-    lua_register(L, "sendCanFrame", lua_sendCanFrame);
-    lua_register(L, "print", lua_print);
-    lua_register(L, "printf", lua_printf);
-    lua_register(L, "serialRead", lua_serialRead);
-    lua_register(L, "adcReadDiff", lua_adcReadDiff);
-    lua_register(L, "floatToString", lua_floatToString);
-    lua_register(L, "getFileContents", lua_getFileContents);
-    lua_register(L, "C_getNumPWMOut", lua_getNumPWMOut);
-    lua_register(L, "C_getNumPWMIn", lua_getNumPWMIn); 
+    lua_register(L, "_log",                 lua_log);
+    lua_register(L, "millis",               lua_millis);
+    lua_register(L, "sendCanFrame",         lua_sendCanFrame);
+    lua_register(L, "print",                lua_print);
+    lua_register(L, "printf",               lua_printf);
+    lua_register(L, "serialRead",           lua_serialRead);
+    lua_register(L, "adcReadDiff",          lua_adcReadDiff);
+    lua_register(L, "floatToString",        lua_floatToString);
+    lua_register(L, "getFileContents",      lua_getFileContents);
+    lua_register(L, "C_getNumPWMOut",       lua_getNumPWMOut);
+    lua_register(L, "C_getNumPWMIn",        lua_getNumPWMIn);
     lua_register(L, "C_setPwmOutFrequency", lua_setPwmOutFrequency);
     lua_register(L, "C_setPwmOutDutyCycle", lua_setPwmOutDutyCycle);
-    lua_register(L, "C_setPwmOutState", lua_setPwmOutState);
-    lua_register(L, "C_getPwmOutList", lua_getPwmOutList);
-    lua_register(L, "C_getPwmInFrequency", lua_getPwmInFrequency); 
-    lua_register(L, "C_getPwmInDutyCycle", lua_getPwmInDutyCycle);
-    lua_register(L, "C_getPwmInList", lua_getPwmInList);
-    lua_register(L, "C_hrcReset", lua_hrcReset);
-    lua_register(L, "C_hrcSetValue", lua_hrcSetValue); 
-    lua_register(L, "C_hrcSend", lua_hrcSend);
+    lua_register(L, "C_setPwmOutState",     lua_setPwmOutState);
+    lua_register(L, "C_getPwmOutList",      lua_getPwmOutList);
+    lua_register(L, "C_getPwmInFrequency",  lua_getPwmInFrequency); 
+    lua_register(L, "C_getPwmInDutyCycle",  lua_getPwmInDutyCycle);
+    lua_register(L, "C_getPwmInList",       lua_getPwmInList);
+    lua_register(L, "C_hrcReset",           lua_hrcReset);
+    lua_register(L, "C_hrcSetValue",        lua_hrcSetValue);
+    lua_register(L, "C_hrcSend",            lua_hrcSend);
     lua_register(L, "C_startCanPeripheral", lua_startCanPeripheral);
 }
 /*  --------------------------------------------------------------------------------  *

@@ -6,10 +6,7 @@
  *  --  STM32DuinoCANFD version 0.1.0           --  *
  *  --  STM32DuinoPWM   version 0.1.0           --  *
  *  ----------------------------------------------  */
-
-#include "lua.h"
 #include <Arduino.h>
-#include <cstdint>
 #include <lua_bridge.h>
 
 
