@@ -1,8 +1,38 @@
+/*  ----------------------------------------------  *
+ *  --  LowDAQ Release 0.1.0 - 2025-11-19       --  *
+ *  --  Devin Shoemaker - devin@shoemaker.info  --  *
+ *  --  github.com/tailwag/LowDAQ               --  *
+ *  --  Lua Version 5.4.8                       --  *
+ *  --  STM32DuinoCANFD version 0.1.0           --  *
+ *  --  STM32DuinoPWM   version 0.1.0           --  *
+ *  ----------------------------------------------  */
 #include <Arduino.h>
 #include <lua_bridge.h>
 
 
-const char includeDir[] = "/includes/";
+const char * includeDir = "/includes/";
+const char *  configDir = "/config/";
+
+void loadFiles(const char * dir) {
+    FileList * dirFiles = ls(dir);
+
+    if (dirFiles == nullptr) {
+        _log("    [HALT] ERROR: Unable to access " + String(dir));
+        while (true) { }
+    }
+
+    for (uint16_t i = 0; i < dirFiles->count; i++) {
+        String filePath = String(dir) + String(dirFiles->names[i]);
+
+        if (!loadLuaScript(filePath.c_str())) {
+            _log("    [HALT] ERROR: Unable to load file: " + String(dir) + String(filePath));
+            while(true) { }
+        }
+        else {
+            _log("    " + filePath + ": ✓");
+        }
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -10,33 +40,28 @@ void setup() {
     delay(1000);
 
     Serial.println();
-    Serial.println("Staring up ...");
-    Serial.print("Initialize Lua ... ");
+    _log("Starting up ...");
     delay(200);
 
 	// load main lua file. this defines the console behavior and 
 	// the main structure of the available commands
     if (!initLua("/main.lua")) {
-        Serial.println("Failed to initialize Lua!");
+        _log("Failed to initialize Lua!");
         while(true);
     }
-    Serial.println("✓");
+
+    // load include files
+    _log("Loading include files: ");
+    loadFiles(includeDir);
+
+    // load config files
+    _log("Loading config files: ");
+    loadFiles(configDir);
+
+
+    // run lua setup function
+    luaStartup();
     
-    Serial.println("Loading include files: ");
-
-    FileList * includeFiles = ls(includeDir);
-
-    for (uint16_t i = 0; i < includeFiles->count; i++) {
-        String filePath = String(includeDir) + String(includeFiles->names[i]);
-
-        if (!loadLuaScript(filePath.c_str())) {
-            Serial.print("Error loading include file: ");
-            Serial.println(filePath);
-        }
-        else {
-            Serial.println("    " + filePath + ": ✓");
-        }
-    }
 
     Serial.println();
     Serial.println("***********************************************************");
@@ -45,11 +70,11 @@ void setup() {
     Serial.println("**          |  |__| . | | | |  |  |     |  |  |          **");
     Serial.println("**          |_____|___|_____|____/|__|__|__  _|          **");
     Serial.println("**                                         |__|          **");
-    Serial.println("**  Low level data scquisition and logic control system. **");
+    Serial.println("**  Low level data acquisition and logic control system. **");
     Serial.println("**      Devin Shoemaker, 2025 - devin@shoemaker.info     **");
     Serial.println("***********************************************************");
     Serial.println();
-    Serial.print("LowDAQ >");
+    Serial.print("LowDAQ > ");
 }
 
 void loop() {
