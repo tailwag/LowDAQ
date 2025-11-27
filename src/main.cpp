@@ -1,5 +1,5 @@
 /*  ----------------------------------------------  *
- *  --  LowDAQ Release 0.1.0 - 2025-11-19       --  *
+ *  --  LowDAQ Release 0.1.1 - 2025-11-27       --  *
  *  --  Devin Shoemaker - devin@shoemaker.info  --  *
  *  --  github.com/tailwag/LowDAQ               --  *
  *  --  Lua Version 5.4.8                       --  *

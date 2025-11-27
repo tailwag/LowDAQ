@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
+#include "FDCAN_Defines.h"
 #include "STM32DuinoPWM.hpp"
 #include "STM32DuinoCANFD.h"
 
@@ -330,16 +331,11 @@ int lua_startCanPeripheral(lua_State* L) {
     uint32_t dBitrate = luaL_checkinteger(L, 2);
     uint8_t  nSample  = luaL_checkinteger(L, 3);
     uint8_t  dSample  = luaL_checkinteger(L, 4);
-    uint8_t chanModeEnumVal = luaL_checkinteger(L, 5);
-    uint8_t frmFormtEnumVal = luaL_checkinteger(L, 6);
+    uint8_t  chanModeEnumVal = luaL_checkinteger(L, 5);
+    uint16_t frmFormtEnumVal = luaL_checkinteger(L, 6);
 
     if (chanModeEnumVal >= NUM_MODE || chanModeEnumVal < 0) {
         _log("[HALT] ERROR: Peripheral mode value out of range. Check CAN config file!");
-        while (true) { }
-    }
-
-    if (frmFormtEnumVal >= NUM_FRAMEFORMAT || frmFormtEnumVal < 0) {
-        _log("[HALT] ERROR: Frame format value out of range. Check CAN config file!");
         while (true) { }
     }
 
@@ -351,11 +347,20 @@ int lua_startCanPeripheral(lua_State* L) {
         "External Loopback"
     };
 
-    String frameStr[3] = {
-        "CAN 2.0B",
-        "CAN FD, Non BRS",
-        "CAN-FD BRS"
-    };
+    String frmFormatString;
+    if (frmFormtEnumVal == FDCAN_FrameFormat::CLASSIC) {
+        frmFormatString = "CAN 2.0B";
+    }
+    else if (frmFormtEnumVal == FDCAN_FrameFormat::FD_NO_BRS) {
+        frmFormatString = "CAN-FD, Non BRS";
+    }
+    else if (frmFormtEnumVal == FDCAN_FrameFormat::FD_BRS) {
+        frmFormatString = "CAN-FD BRS";
+    }
+    else {
+        _log("[HALT] ERROR: Frame format value out of range. Check CAN config file!");
+        while (true) { }
+    }
 
     FDCAN_Settings Settings(nBitrate, dBitrate, nSample, dSample);
     Settings.Mode           = (FDCAN_Mode) chanModeEnumVal;
@@ -363,7 +368,7 @@ int lua_startCanPeripheral(lua_State* L) {
 
     _log("    == Start CAN-FD Peripheral ==");
     _log("    Requested Mode  : " + modeStr[(int)chanModeEnumVal]);
-    _log("    Frame Format    : " + frameStr[(int)frmFormtEnumVal]);
+    _log("    Frame Format    : " + frmFormatString);
     _log("    Req. Arb. Speed : " + String(nBitrate));
     _log("    Real Arb. Speed : " + String(Settings.GetNominalBitrate()));
     _log("    Req. Arb. SP    : " + String((float)nSample) + "%");
