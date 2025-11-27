@@ -12,8 +12,8 @@ local mode = {
 
 local format = {
     classic = 0,
-    fd_no_brs = 1,
-    fd_brs = 2,
+    fd_no_brs = 256,
+    fd_brs = 768,
 }
 ---------------------------------------------------------------
 ---  END ENUM VALUES                                        ---
