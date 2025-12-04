@@ -1,3 +1,29 @@
+if not Global then
+    Global = {}
+end
+
+if not Global.CanConfig then
+    Global.CanConfig = {}
+end
+
+if not Global.CanConfig.mode then
+    Global.CanConfig.mode = {
+        normal = 0,
+        restricted = 1,
+        monitoring = 2,
+        internal_loopback = 3,
+        external_loopback = 4,
+    }
+end
+
+if not Global.CanConfig.format then
+    Global.CanConfig.format = {
+        classic = 0,
+        fd_no_brs = 256,
+        fd_brs = 768,
+    }
+end
+
 HRCFrameLength = 0
 local dlcBytes = {1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64}
 
@@ -13,7 +39,7 @@ local orderMap = {
 }
 
 -- human readable can library
-hrcReset = function(id, dlc)
+hrcReset = function(id, dlc, format)
     if not id or id < 0 or id > 0x7FF or id ~= math.floor(id) then
         return "id must be integer between 0x000 and 0x7FF", 1
     end
@@ -22,9 +48,23 @@ hrcReset = function(id, dlc)
         return "dlc must be integer between 0 and 15"
     end
 
+    format = format and format or "fd_brs"
+
+    local formEnumVal = -1
+    for k, v in pairs(Global.CanConfig.format) do
+        if format == k then
+            formEnumVal = v
+            break
+        end
+    end
+
+    if formEnumVal == -1 then
+        return "invalid format specified, must be classic, fd_no_brs, or fd_brs", 1
+    end
+
     HRCFrameLength = dlc == 0 and dlc or dlcBytes[dlc]
 
-    C_hrcReset(id, dlc)
+    C_hrcReset(id, dlc, formEnumVal)
 
     return nil, 0
 end

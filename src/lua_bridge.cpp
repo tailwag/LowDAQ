@@ -294,9 +294,11 @@ int lua_getPwmInList(lua_State* L) {
 int lua_hrcReset(lua_State* L) {
     uint16_t canId = luaL_checkinteger(L, 1);
     uint8_t canDlc = luaL_checkinteger(L, 2);
+    FDCAN_FrameFormat format = (FDCAN_FrameFormat)luaL_checkinteger(L, 3);
 
     LuaSendFrame->canId  = canId;
     LuaSendFrame->canDlc = canDlc;
+    LuaSendFrame->format = format;
     LuaSendFrame->clear();
 
     return 1;
