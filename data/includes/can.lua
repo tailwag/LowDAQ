@@ -50,8 +50,6 @@ end
 
 -- list out existing periodic can frames
 pfList = function()
-	-- initialize an array to hold frames
-
 	-- iterate over global frames array, this is what holds all periodic frame definitions
     for i, f in ipairs(frames) do
         local formStringVal = getFormStringVal(f.format)
@@ -60,7 +58,8 @@ pfList = function()
         printf(string.format("%d. 0x%X %s - %dms - ", i, f.id, formStringVal, f.period))
 
         --TODO: fewer bytes given than dlc causes crash due to nil being passed to format
-		-- add each data byte to line in hex
+		
+        -- add each data byte to line in hex
         for j = 1, f.dlc do
             printf(string.format("%02X ", f.data[j]))
         end
