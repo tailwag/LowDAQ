@@ -199,7 +199,7 @@ function sendPeriodicFrames()
     local t = millis()
     for _, f in ipairs(frames) do
         if f.enabled and t >= f.lastSent + f.period then
-            sendCanFrame(f.id, f.dlc, table.unpack(f.data))
+            sendCanFrame(f.id, f.dlc, f.format, table.unpack(f.data))
             f.lastSent = t
         end
     end

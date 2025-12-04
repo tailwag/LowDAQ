@@ -1,10 +1,8 @@
 #include <Arduino.h>
 #include <lua_bridge.h>
 #include <Adafruit_ADS1X15.h>
-#include "FDCAN_Defines.h"
 #include "STM32DuinoPWM.hpp"
 #include "STM32DuinoCANFD.h"
-#include "lauxlib.h"
 
 // enum max values. enums in FDCAN_Defines.h
 #define NUM_MODE 5

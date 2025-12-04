@@ -24,15 +24,42 @@ if not Global.CanConfig.format then
     }
 end
 
+local getFormEnumVal = function(format)
+    format = format and format or "fd_brs"
+
+    for k, v in pairs(Global.CanConfig.format) do
+        if format == k then
+            return v
+        end
+    end
+
+    return -1
+end
+
+local getFormStringVal = function(format)
+    for k, v in pairs(Global.CanConfig.format) do 
+        if format == v then 
+            return k
+        end
+    end
+
+    return nil
+end
+
+
+
 -- list out existing periodic can frames
 pfList = function()
 	-- initialize an array to hold frames
 
 	-- iterate over global frames array, this is what holds all periodic frame definitions
     for i, f in ipairs(frames) do
-		-- format line as "1. 0x7FF - 1000ms"
-        printf(string.format("%d. 0x%X - %dms - ", i, f.id, f.period))
+        local formStringVal = getFormStringVal(f.format)
 
+		-- format line as "1. 0x7FF - 1000ms"
+        printf(string.format("%d. 0x%X %s - %dms - ", i, f.id, formStringVal, f.period))
+
+        --TODO: fewer bytes given than dlc causes crash due to nil being passed to format
 		-- add each data byte to line in hex
         for j = 1, f.dlc do
             printf(string.format("%02X ", f.data[j]))
@@ -66,7 +93,7 @@ pfToggle = function(id, state)
     return "Frame 0x" .. string.format("%X", id) .. " not found", 1
 end
 
-pfAddFrame = function(id, dlc, period, ...)
+pfAddFrame = function(id, dlc, format, period, ...)
     if not id or id < 0x000 or id > 0x7FF or math.floor(id) ~= id then
         return "id must be integer between 0x000 and 0x7FF", 1
     end
@@ -75,11 +102,16 @@ pfAddFrame = function(id, dlc, period, ...)
         return "dlc must be integer between 0 and 15", 1
     end
 
+    local formEnumVal = getFormEnumVal(format)
+    if formEnumVal == -1 then
+        return "invalid format value, must be classic, fd_no_brs, or fd_brs", 1
+    end
+
     if not period or period < 1 or period > 100000 or math.floor(period) ~= period then
         return "period must be integer between 1 and 100000", 1
     end
 
-    local pf = { id = id, dlc = dlc, period = period, data = table.pack(...), enabled = true, lastSent = 0 }
+    local pf = { id = id, dlc = dlc, format = formEnumVal, period = period, data = table.pack(...), enabled = true, lastSent = 0 }
 
     for _, v in ipairs(pf.data) do
         v = v >   0 and v or   0
@@ -180,18 +212,10 @@ ssSend = function(id, dlc, format, ...)
       return "DLC must be between 0 and 15"
     end
 
-    format = format and format or "fd_brs"
-
-    local formEnumVal = -1
-    for k, v in pairs(Global.CanConfig.format) do
-        if format == k then
-            formEnumVal = v
-            break
-        end
-    end
+    local formEnumVal = getFormEnumVal(format)
 
     if formEnumVal == -1 then
-        return "invalid format specified, must be classic, fd_no_brs, or fd_brs", 1
+        return "invalid format value, must be classic, fd_no_brs, or fd_brs", 1
     end
 
     sendCanFrame(id, dlc, formEnumVal, ...)
@@ -253,7 +277,7 @@ commands.pfTimeSet.run     = pfTimeSet
 
 commands.ssSend = {
   helpCategory    = "Single Shot CAN Frame Commands", 
-  helpArguments   = {"id", "dlc", "data1", "data2", "..."},
+  helpArguments   = {"id", "dlc", "format", "data1", "data2", "..."},
   helpDescription = "send a can frame once",
 }
 commands.ssSend.run  = ssSend
