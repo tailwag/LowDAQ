@@ -34,6 +34,11 @@ adcChannels = {
     {1,0,"mV"},
 }
 
+-- remove whitespace from string
+function trim(s)
+  return s:gsub("^%s*(.-)%s*$", "%1")
+end
+
 -- check if value is in table
 inTable = function(t, v)
     for _, i in ipairs(t) do
@@ -283,7 +288,7 @@ function parseCommand(str)
                     depth = depth - 1
                 end
             elseif c == "," and depth == 0 then
-                local v = tonumber(current) or current
+                local v = tonumber(current) or trim(current)
                 table.insert(argList, v)
                 current = ""
             else

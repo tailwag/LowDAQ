@@ -1,3 +1,29 @@
+if not Global then
+    Global = {}
+end
+
+if not Global.CanConfig then
+    Global.CanConfig = {}
+end
+
+if not Global.CanConfig.mode then
+    Global.CanConfig.mode = {
+        normal = 0,
+        restricted = 1,
+        monitoring = 2,
+        internal_loopback = 3,
+        external_loopback = 4,
+    }
+end
+
+if not Global.CanConfig.format then
+    Global.CanConfig.format = {
+        classic = 0,
+        fd_no_brs = 256,
+        fd_brs = 768,
+    }
+end
+
 -- list out existing periodic can frames
 pfList = function()
 	-- initialize an array to hold frames
@@ -145,18 +171,32 @@ pfTimeSet = function(id, value)
     return "Frame 0x" .. string.format("%X", id) .. " not found!", 1
 end
 
-ssSend = function(id, dlc, ...)
-  if id > 0x7FF or id < 0x000 then
-    return "ID must be between 0x000 and 0x7FF (11 bit)"
-  end
+ssSend = function(id, dlc, format, ...)
+    if id > 0x7FF or id < 0x000 then
+      return "ID must be between 0x000 and 0x7FF (11 bit)"
+    end
 
-  if dlc > 15 or dlc < 0 then
-    return "DLC must be between 0 and 15"
-  end
+    if dlc > 15 or dlc < 0 then
+      return "DLC must be between 0 and 15"
+    end
 
-  sendCanFrame(id, dlc, ...)
+    format = format and format or "fd_brs"
 
-  return nil
+    local formEnumVal = -1
+    for k, v in pairs(Global.CanConfig.format) do
+        if format == k then
+            formEnumVal = v
+            break
+        end
+    end
+
+    if formEnumVal == -1 then
+        return "invalid format specified, must be classic, fd_no_brs, or fd_brs", 1
+    end
+
+    sendCanFrame(id, dlc, formEnumVal, ...)
+
+    return nil, 0
 end
 
 -------------------------------------------------------------------

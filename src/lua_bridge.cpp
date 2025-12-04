@@ -4,6 +4,7 @@
 #include "FDCAN_Defines.h"
 #include "STM32DuinoPWM.hpp"
 #include "STM32DuinoCANFD.h"
+#include "lauxlib.h"
 
 // enum max values. enums in FDCAN_Defines.h
 #define NUM_MODE 5
@@ -75,14 +76,15 @@ int lua_sendCanFrame(lua_State* L) {
 
     SendFrame.canId  = luaL_checkinteger(L, 1);
     SendFrame.canDlc = luaL_checkinteger(L, 2);
+    SendFrame.format = (FDCAN_FrameFormat)luaL_checkinteger(L, 3);
 
-    uint8_t dataLength = lua_gettop(L) - 2;
+    uint8_t dataLength = lua_gettop(L) - 3;
     uint8_t byteLength = DlcToLen(SendFrame.canDlc);
 
     dataLength = (byteLength < dataLength) ? byteLength : dataLength;
 
     for (int i = 0; i < dataLength; i++) {
-        SendFrame.data[i] = luaL_checkinteger(L, 3 + i); 
+        SendFrame.data[i] = luaL_checkinteger(L, 4 + i); 
     }
     can0.sendFrame(&SendFrame);
     return 0;
@@ -292,13 +294,9 @@ int lua_getPwmInList(lua_State* L) {
 }
 
 int lua_hrcReset(lua_State* L) {
-    uint16_t canId = luaL_checkinteger(L, 1);
-    uint8_t canDlc = luaL_checkinteger(L, 2);
-    FDCAN_FrameFormat format = (FDCAN_FrameFormat)luaL_checkinteger(L, 3);
-
-    LuaSendFrame->canId  = canId;
-    LuaSendFrame->canDlc = canDlc;
-    LuaSendFrame->format = format;
+    LuaSendFrame->canId  = luaL_checkinteger(L, 1);
+    LuaSendFrame->canDlc = luaL_checkinteger(L, 2);
+    LuaSendFrame->format = (FDCAN_FrameFormat)luaL_checkinteger(L, 3);
     LuaSendFrame->clear();
 
     return 1;

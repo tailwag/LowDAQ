@@ -129,8 +129,8 @@ end
 
 commands.hrcReset = {
     helpCategory    = "Human Readable CAN Commands",
-    helpArguments   = {"canId", "canDlc"},
-    helpDescription = "clear the human readable frame",
+    helpArguments   = {"canId", "canDlc", "(format)"},
+    helpDescription = "reset the human readable frame",
 }
 commands.hrcReset.run = hrcReset
 
